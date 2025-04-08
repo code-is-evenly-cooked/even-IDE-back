@@ -8,6 +8,3 @@ WORKDIR /app
 COPY --from=build /app/build/libs/ /app/
 EXPOSE 8080
 ENTRYPOINT ["sh", "-c", "java -jar $(ls /app/*SNAPSHOT.jar | grep -v plain)"]
-
-
-# docker build -t evenly-backend .
