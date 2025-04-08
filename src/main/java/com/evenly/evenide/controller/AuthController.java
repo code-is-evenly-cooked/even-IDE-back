@@ -6,10 +6,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,5 +19,17 @@ public class AuthController {
     public ResponseEntity<String> signup(@RequestBody @Valid SignUpDto signUpDto){
         authService.signup(signUpDto);
         return ResponseEntity.status(HttpStatus.CREATED).body("회원가입 성공!");
+    }
+
+    @GetMapping("/check-email")
+    public ResponseEntity<String> checkEmail(@RequestParam String email){
+        authService.checkEmail(email);
+        return ResponseEntity.ok("사용 가능한 이메일입니다.");
+    }
+
+    @GetMapping("/check-nickname")
+    public ResponseEntity<String> checkNickname(@RequestParam String nickname){
+        authService.checkNickname(nickname);
+        return ResponseEntity.ok("사용 가능한 닉네임입니다.");
     }
 }
