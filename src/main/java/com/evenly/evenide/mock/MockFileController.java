@@ -10,20 +10,6 @@ import java.util.Map;
 @RequestMapping("/mock")
 public class MockFileController {
 
-    @GetMapping("/file")
-    public ResponseEntity<?> getFile() {
-        Map<String, Object> file = Map.of(
-                        "fileId", "f001",
-                        "name", "main.py",
-                        "content", "print('Hello')",
-                        "updatedAt", "2025-04-07T11:00:00Z",
-                        "isLocked", false,
-                        "isEditLocked", false
-                );
-
-        return ResponseEntity.ok(file);
-    }
-
     @PostMapping("/file")
     public ResponseEntity<?> createFile(@RequestBody Map<String, String> req) {
         return ResponseEntity.ok(Map.of(
@@ -55,7 +41,7 @@ public class MockFileController {
     }
 
     @GetMapping("/file/{fileId}")
-    public ResponseEntity<?> accessFile(@PathVariable String projectId, @PathVariable String fileId) {
+    public ResponseEntity<?> accessFile(@PathVariable String fileId) {
         return ResponseEntity.ok(Map.of(
                 "fileId", fileId,
                 "name", "main.py",
