@@ -10,13 +10,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SignUpDto {
 
-    @Email
+    @Email(message = "올바른 이메일을 입력해주세요.")
     @NotBlank(message = "이메일은 필수 입력 값입니다.")
-    @Pattern(regexp = "^(?:\\w+\\.?)*\\w+@(?:\\w+\\.)+\\w+$\n", message = "올바른 이메일을 입력해주세요.")
     private String email;
 
     @NotBlank(message = "비밀번호는 필수 입력 값입니다.")
-    @Pattern(regexp = "^[a-zA-Z0-9!@#$%^&*]{6,}$",
+    @Pattern(regexp = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[_!@#$%^&*])[A-Za-z\\d_!@#$%^&*]{6,}$",
             message ="비밀번호는 대문자, 소문자, 숫자, 특수문자를 포함한 6자 이상이어야 합니다.")
     private String password;
 
