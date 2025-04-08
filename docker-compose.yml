@@ -17,7 +17,7 @@ services:
 
   db:
     image: mysql:latest
-    container_name: evenly_mysql
+    container_name: evenide_mysql
     restart: always
     env_file:
       - .env
