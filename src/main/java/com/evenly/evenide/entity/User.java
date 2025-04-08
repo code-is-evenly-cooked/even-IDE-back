@@ -33,11 +33,18 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(nullable = false)
+    private String provider = "local";
+
+    private String providerId;
+
+
     public static User create(String email, String encodedPassword, String nickname) {
         User user = new User();
         user.email = email;
         user.password = encodedPassword;
         user.nickname = nickname;
+        user.provider = "local";
         return user;
     }
 }
