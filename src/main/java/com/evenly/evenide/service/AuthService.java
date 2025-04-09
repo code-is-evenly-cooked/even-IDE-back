@@ -23,6 +23,11 @@ public class AuthService {
             throw new CustomException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
+        // 닉네임 중복 확인
+        if (userRepository.existsByNickname(signUpDto.getNickname())) {
+            throw new CustomException(ErrorCode.NICKNAME_ALREADY_EXISTS);
+        }
+
         // 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(signUpDto.getPassword());
 
