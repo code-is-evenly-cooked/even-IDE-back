@@ -82,7 +82,7 @@ public class MockFileController {
 
 
     @GetMapping("/projects/{projectId}/files/{fileId}")
-    public ResponseEntity<?> accessFile(@PathVariable String fileId) {
+    public ResponseEntity<?> accessFile(@PathVariable String projectId, @PathVariable String fileId) {
         return ResponseEntity.ok(Map.of(
                 "fileId", fileId,
                 "filename", "main.py",
@@ -95,36 +95,36 @@ public class MockFileController {
         ));
     }
 
-    @PatchMapping("/projects/{projectId}/file/{fileId}")
-    public ResponseEntity<?> updateFile(@PathVariable String fileId, @RequestBody Map<String, String> req) {
+    @PatchMapping("/projects/{projectId}/files/{fileId}")
+    public ResponseEntity<?> updateFile(@PathVariable String projectId, @PathVariable String fileId, @RequestBody Map<String, String> req) {
         return ResponseEntity.ok(Map.of(
                 "fileId", fileId,
                 "filename", req.get("filename")
         ));
     }
 
-    @DeleteMapping("/projects/{projectId}/file/{fileId}")
-    public ResponseEntity<?> deleteFile(@PathVariable String fileId) {
+    @DeleteMapping("/projects/{projectId}/files/{fileId}")
+    public ResponseEntity<?> deleteFile(@PathVariable String projectId, @PathVariable String fileId) {
         return ResponseEntity.ok(Map.of("message", "success"));
     }
 
-    @PostMapping("/projects/{projectId}/file/lock")
-    public ResponseEntity<?> lockFile(@RequestBody Map<String, String> req) {
+    @PostMapping("/projects/{projectId}/files/{fileId}/lock")
+    public ResponseEntity<?> lockFile(@PathVariable String projectId, @PathVariable String fileId) {
         return ResponseEntity.ok(Map.of("message", "success"));
     }
 
-    @PostMapping("/projects/{projectId}/file/unlock")
-    public ResponseEntity<?> unlockFile(@RequestBody Map<String, String> req) {
+    @PostMapping("/projects/{projectId}/files/{fileId}/unlock")
+    public ResponseEntity<?> unlockFile(@PathVariable String projectId, @PathVariable String fileId) {
         return ResponseEntity.ok(Map.of("message", "success"));
     }
 
-    @PostMapping("/projects/{projectId}/file/edit/lock")
-    public ResponseEntity<?> lockEdit(@RequestBody Map<String, String> req) {
+    @PostMapping("/projects/{projectId}/files/{fileId}/edit/lock")
+    public ResponseEntity<?> lockEdit(@PathVariable String projectId, @PathVariable String fileId) {
         return ResponseEntity.ok(Map.of("message", "success"));
     }
 
-    @PostMapping("/projects/{projectId}/file/edit/unlock")
-    public ResponseEntity<?> unlockEdit(@RequestBody Map<String, String> req) {
+    @PostMapping("/projects/{projectId}/files/{fileId}/edit/unlock")
+    public ResponseEntity<?> unlockEdit(@PathVariable String projectId, @PathVariable String fileId) {
         return ResponseEntity.ok(Map.of("message", "success"));
     }
 }
