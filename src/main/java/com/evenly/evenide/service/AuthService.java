@@ -16,7 +16,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public void signup(SignUpDto signUpDto) {
+    public User signup(SignUpDto signUpDto) {
 
         // 이메일 중복 확인
         if (userRepository.existsByEmail(signUpDto.getEmail())) {
@@ -32,7 +32,7 @@ public class AuthService {
                 signUpDto.getNickname()
         );
 
-        userRepository.save(user);
+        return userRepository.save(user);
     }
 
     public void checkEmail(String email) {
