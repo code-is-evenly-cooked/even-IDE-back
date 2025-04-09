@@ -1,6 +1,8 @@
 package com.evenly.evenide.controller;
 
 import com.evenly.evenide.dto.SignUpDto;
+import com.evenly.evenide.dto.SignUpResponse;
+import com.evenly.evenide.entity.User;
 import com.evenly.evenide.global.response.MessageResponse;
 import com.evenly.evenide.service.AuthService;
 import jakarta.validation.Valid;
@@ -17,9 +19,10 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/signup")
-    public ResponseEntity<MessageResponse> signup(@RequestBody @Valid SignUpDto signUpDto){
-        authService.signup(signUpDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new MessageResponse("success"));
+    public ResponseEntity<SignUpResponse> signup(@RequestBody @Valid SignUpDto signUpDto){
+        User user = authService.signup(signUpDto);
+        SignUpResponse response = new SignUpResponse(user.getId(), user.getEmail(), user.getNickname());
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/check-email")
