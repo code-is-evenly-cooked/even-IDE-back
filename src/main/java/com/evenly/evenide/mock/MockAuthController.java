@@ -31,7 +31,7 @@ public class MockAuthController {
 
     @PostMapping("/password-reset")
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> req) {
-        return ResponseEntity.ok(Map.of("message", "비밀번호 재설정 메일 발송됨"));
+        return ResponseEntity.ok(Map.of("message", "success"));
     }
 
     @PostMapping("/social")
