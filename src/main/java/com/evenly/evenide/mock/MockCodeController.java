@@ -10,7 +10,7 @@ import java.util.Map;
 @RequestMapping("/mock/code")
 public class MockCodeController {
 
-    @PostMapping("/run")
+    @PostMapping("/execute")
     public ResponseEntity<?> runCode(@RequestBody Map<String, String> req) {
         return ResponseEntity.ok(Map.of(
                 "output", "Hello",
