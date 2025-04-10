@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -60,7 +62,7 @@ public class AuthService {
     }
 
     // 로그인 부분
-    public String[] login(SignInDto signInDto) {
+    public Map<String, String> login(SignInDto signInDto) {
 
         // 가입되지 않은 사용자 일때
         User user = userRepository.findByEmail(signInDto.getEmail())
@@ -92,7 +94,10 @@ public class AuthService {
                                 .build()
                         )
                 );
-        return tokens;
+        return Map.of(
+                "accessToken", accessToken,
+                "refreshToken", refreshToken
+        );
     }
 
 }

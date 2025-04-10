@@ -15,6 +15,8 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth")
@@ -42,10 +44,10 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<MessageResponse> login(@RequestBody @Valid SignInDto signInDto, HttpServletResponse response){
-        String[] tokens = authService.login(signInDto);
-        String accessToken = tokens[0];
-        String refreshToken = tokens[1];
+    public ResponseEntity<Map<String, String>> login(@RequestBody @Valid SignInDto signInDto, HttpServletResponse response){
+        Map<String, String> tokens = authService.login(signInDto);
+        String accessToken = tokens.get("access_token");
+        String refreshToken = tokens.get("refresh_token");
 
 
         //accessToken 쿠키로 설정
@@ -57,7 +59,7 @@ public class AuthController {
                 .build();
 
         response.setHeader("Set-Cookie", accessCookie.toString());
-        return ResponseEntity.ok(new MessageResponse("로그인 성공"));
+        return ResponseEntity.ok(tokens);
 
     }
 
