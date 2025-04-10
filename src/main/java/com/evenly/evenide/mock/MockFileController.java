@@ -3,6 +3,7 @@ package com.evenly.evenide.mock;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -108,23 +109,30 @@ public class MockFileController {
         return ResponseEntity.ok(Map.of("message", "success"));
     }
 
-    @PostMapping("/projects/{projectId}/files/{fileId}/lock")
-    public ResponseEntity<?> lockFile(@PathVariable String projectId, @PathVariable String fileId) {
+    private Map<String, Map<String, Boolean>> fileLockStatus = new HashMap<>();
+    private Map<String, Map<String, Boolean>> fileEditLockStatus = new HashMap<>();
+
+    @PatchMapping("/projects/{projectId}/files/{fileId}/lock")
+    public ResponseEntity<?> lockUnlockFile(
+            @PathVariable String projectId,
+            @PathVariable String fileId) {
+        fileLockStatus.putIfAbsent(projectId, new HashMap<>());
+        Boolean isLocked = fileLockStatus.get(projectId).getOrDefault(fileId, false);
+        isLocked = !isLocked;
+        fileLockStatus.get(projectId).put(fileId, isLocked);
         return ResponseEntity.ok(Map.of("message", "success"));
     }
 
-    @PostMapping("/projects/{projectId}/files/{fileId}/unlock")
-    public ResponseEntity<?> unlockFile(@PathVariable String projectId, @PathVariable String fileId) {
-        return ResponseEntity.ok(Map.of("message", "success"));
-    }
+    @PatchMapping("/projects/{projectId}/files/{fileId}/edit/lock")
+    public ResponseEntity<?> lockUnlockEdit(
+            @PathVariable String projectId,
+            @PathVariable String fileId) {
 
-    @PostMapping("/projects/{projectId}/files/{fileId}/edit/lock")
-    public ResponseEntity<?> lockEdit(@PathVariable String projectId, @PathVariable String fileId) {
-        return ResponseEntity.ok(Map.of("message", "success"));
-    }
+        fileEditLockStatus.putIfAbsent(projectId, new HashMap<>());
+        Boolean isLocked = fileEditLockStatus.get(projectId).getOrDefault(fileId, false);
+        isLocked = !isLocked;
+        fileEditLockStatus.get(projectId).put(fileId, isLocked);
 
-    @PostMapping("/projects/{projectId}/files/{fileId}/edit/unlock")
-    public ResponseEntity<?> unlockEdit(@PathVariable String projectId, @PathVariable String fileId) {
         return ResponseEntity.ok(Map.of("message", "success"));
     }
 }
