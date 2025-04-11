@@ -1,15 +1,21 @@
 package com.evenly.evenide.controller;
 
+import com.evenly.evenide.dto.SignInDto;
 import com.evenly.evenide.dto.SignUpDto;
 import com.evenly.evenide.dto.SignUpResponse;
 import com.evenly.evenide.entity.User;
 import com.evenly.evenide.global.response.MessageResponse;
 import com.evenly.evenide.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -36,4 +42,33 @@ public class AuthController {
         authService.checkNickname(nickname);
         return ResponseEntity.ok(new MessageResponse("사용 가능한 닉네임입니다."));
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, String>> login(@RequestBody @Valid SignInDto signInDto, HttpServletResponse response){
+        Map<String, String> tokens = authService.login(signInDto);
+        String accessToken = tokens.get("access_token");
+        String refreshToken = tokens.get("refresh_token");
+
+
+        //accessToken 쿠키로 설정
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", accessToken)
+                .httpOnly(true)
+                .secure(false)          //https로 바뀌면 true 로 수정
+                .sameSite("Lax")        //https로 바뀌면 None 으로 수정
+                .maxAge(60*60)
+                .build();
+
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .secure(false)
+                .sameSite("Lax")
+                .maxAge(7 * 24 * 60 * 60)
+                .build();
+
+        response.setHeader("Set-Cookie", accessCookie.toString());
+        response.addHeader("Set-Cookie", refreshCookie.toString());
+        return ResponseEntity.ok(tokens);
+
+    }
+
 }
