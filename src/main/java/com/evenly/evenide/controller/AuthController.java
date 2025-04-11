@@ -53,8 +53,8 @@ public class AuthController {
         //accessToken 쿠키로 설정
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", accessToken)
                 .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
+                .secure(false)          //https로 바뀌면 true 로 수정
+                .sameSite("Lax")        //https로 바뀌면 None 으로 수정
                 .maxAge(60*60)
                 .build();
 
