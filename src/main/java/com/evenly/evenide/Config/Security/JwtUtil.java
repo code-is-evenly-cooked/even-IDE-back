@@ -1,6 +1,8 @@
 package com.evenly.evenide.Config.Security;
 
 import com.evenly.evenide.dto.JwtUserInfoDto;
+import com.evenly.evenide.global.exception.CustomException;
+import com.evenly.evenide.global.exception.ErrorCode;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -46,7 +48,7 @@ public class JwtUtil {
 
     public String renewAccessToken(String refreshToken) {
         if (!vaildateRefreshToken(refreshToken)) {
-            throw new JwtException("Refresh token이 만료되었습니다. 다시 로그인하세요.");
+            throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
         Claims claims = parseClaims(refreshToken, refreshKey);
         String userId = claims.getSubject();
