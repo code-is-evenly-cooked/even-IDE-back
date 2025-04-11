@@ -46,7 +46,7 @@ public class JwtUtil {
     }
 
     public String renewAccessToken(String refreshToken) {
-        if (!vaildateRefreshToken(refreshToken)) {
+        if (!validateRefreshToken(refreshToken)) {
             throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
         Claims claims = parseClaims(refreshToken, refreshKey);
@@ -54,15 +54,15 @@ public class JwtUtil {
         return generateToken(new JwtUserInfoDto(userId), accessKey, accessTokenExpireTime);
     }
 
-    private boolean vaildateRefreshToken(String token) {
-        return vaildateToken(token, refreshKey);
+    private boolean validateRefreshToken(String token) {
+        return validateToken(token, refreshKey);
     }
 
-    private boolean vailldateAccessToken(String token) {
-        return vaildateToken(token, accessKey);
+    public boolean validateAccessToken(String token) {
+        return validateToken(token, accessKey);
     }
 
-    private boolean vaildateToken(String token, Key key) {
+    private boolean validateToken(String token, Key key) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
@@ -80,7 +80,7 @@ public class JwtUtil {
         return parseClaims(token, accessKey);
     }
 
-    private String getUserIdFromToken(String token) {
+    public String getUserIdFromToken(String token) {
         return parseClaims(token, accessKey).getSubject();
     }
 
