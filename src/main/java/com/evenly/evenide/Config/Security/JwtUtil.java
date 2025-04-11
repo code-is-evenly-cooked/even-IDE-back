@@ -39,7 +39,6 @@ public class JwtUtil {
     private String generateToken(JwtUserInfoDto user, Key accessKey, long accessTokenExpireTime) {
         return Jwts.builder()
                 .setSubject(user.getUserId())
-                .claim("role", user.getRole())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpireTime))
                 .signWith(accessKey, SignatureAlgorithm.HS256)
@@ -52,8 +51,7 @@ public class JwtUtil {
         }
         Claims claims = parseClaims(refreshToken, refreshKey);
         String userId = claims.getSubject();
-        String role = claims.get("role", String.class);
-        return generateToken(new JwtUserInfoDto(userId, role), accessKey, accessTokenExpireTime);
+        return generateToken(new JwtUserInfoDto(userId), accessKey, accessTokenExpireTime);
     }
 
     private boolean vaildateRefreshToken(String token) {

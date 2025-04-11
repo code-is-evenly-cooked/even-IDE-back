@@ -7,5 +7,4 @@ import lombok.Getter;
 @AllArgsConstructor
 public class JwtUserInfoDto {
     private String userId;
-    private String role;
 }

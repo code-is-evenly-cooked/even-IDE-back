@@ -18,9 +18,6 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 public class User {
 
-    @Column(nullable = false)
-    private String role = "USER";
-
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 

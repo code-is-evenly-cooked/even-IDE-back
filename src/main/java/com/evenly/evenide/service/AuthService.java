@@ -75,8 +75,7 @@ public class AuthService {
 
         // JWT Token 생성 부분
         JwtUserInfoDto userInfoDto = new JwtUserInfoDto(
-                String.valueOf(user.getId()),
-                user.getRole()
+                String.valueOf(user.getId())
         );
         String[] tokens = jwtUtil.generateToken(userInfoDto);
         String accessToken = tokens[0];
