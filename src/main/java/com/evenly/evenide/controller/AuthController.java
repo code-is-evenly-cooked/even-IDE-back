@@ -58,7 +58,15 @@ public class AuthController {
                 .maxAge(60*60)
                 .build();
 
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .secure(false)
+                .sameSite("Lax")
+                .maxAge(7 * 24 * 60 * 60)
+                .build();
+
         response.setHeader("Set-Cookie", accessCookie.toString());
+        response.addHeader("Set-Cookie", refreshCookie.toString());
         return ResponseEntity.ok(tokens);
 
     }
