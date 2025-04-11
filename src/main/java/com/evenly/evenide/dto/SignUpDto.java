@@ -26,6 +26,6 @@ public class SignUpDto {
     private String password;
 
     @NotBlank(message = "닉네임은 필수 입력 값입니다.")
-    @Pattern(regexp = "^[a-zA-Z0-9가-힣_-]+$", message = "닉네임은 영문, 한글, 숫자, 하이픈(-), 언더바(_)만 가능합니다.")
+    @Pattern(regexp = "^[a-zA-Z0-9가-힣_-]+$", message = "닉네임은 영문, 한글, 숫자, -, _만 가능합니다.")
     private String nickname;
 }
