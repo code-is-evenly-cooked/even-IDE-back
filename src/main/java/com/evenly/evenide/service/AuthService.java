@@ -11,8 +11,10 @@ import com.evenly.evenide.global.exception.ErrorCode;
 import com.evenly.evenide.repository.RefreshTokenRepository;
 import com.evenly.evenide.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
@@ -97,6 +99,76 @@ public class AuthService {
                 "accessToken", accessToken,
                 "refreshToken", refreshToken
         );
+    }
+
+    // refresh 부분
+    public Map<String, String> refresh(String refreshToken) {
+
+        // 유효성 검사
+        if (!jwtUtil.validateRefreshToken(refreshToken)) {
+            throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        // 사용자 ID 추출
+        String userId = jwtUtil.getUserIdFromRefreshToken(refreshToken);
+
+        // DB 사용자 조회
+        User user = userRepository.findById(Long.valueOf(userId))
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        // DB <-> refreshToken 비교
+        RefreshToken saved = refreshTokenRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_REFRESH_TOKEN));
+
+        if (!saved.getRefreshToken().equals(refreshToken)) {
+            throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        // 새 토큰 생성
+        String newAccessToken = jwtUtil.renewAccessToken(refreshToken);
+        String newRefreshToekn = jwtUtil.generateToken(new JwtUserInfoDto(userId))[1];
+
+        // RefreshToekn 갱신
+        saved.updateToken(newRefreshToekn);
+
+        return Map.of(
+                "accessToken", newAccessToken,
+                "refreshToken", newRefreshToekn
+        );
+    }
+
+    @Transactional
+    public void logout(String token) {
+        String userId = jwtUtil.getUserIdFromRefreshToken(token);
+        refreshTokenRepository.deleteByUserId(Long.valueOf(userId));
+    }
+
+    @Transactional
+    public User getUserInfo(String userId) {
+        return userRepository.findById(Long.valueOf(userId))
+                .orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    @Transactional
+    public void updatePassword(String userId, String currentPassword, String newPassword) {
+        User user =  userRepository.findById(Long.valueOf(userId))
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        // 현재 비밀번호 검증
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new CustomException(ErrorCode.INVALID_PASSWORD);
+        }
+
+        // 현재 비밀번호 & 새 비밀번호 같은지 검증
+        if (currentPassword.equals(newPassword)) {
+            throw new CustomException(ErrorCode.SAME_PASSWORD);
+        }
+
+        // 새 비밀번호 저장
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        user.updatePassword(encodedPassword);
+
+        refreshTokenRepository.deleteByUserId(user.getId());
     }
 
 }
