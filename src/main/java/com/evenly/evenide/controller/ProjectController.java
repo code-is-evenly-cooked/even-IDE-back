@@ -1,6 +1,5 @@
 package com.evenly.evenide.controller;
 
-import com.evenly.evenide.Config.Security.JwtUtil;
 import com.evenly.evenide.dto.JwtUserInfoDto;
 import com.evenly.evenide.dto.ProjectRequestDto;
 import com.evenly.evenide.dto.ProjectResponse;
@@ -20,7 +19,6 @@ import java.util.List;
 public class ProjectController {
 
     private final ProjectService projectService;
-    private final JwtUtil jwtUtil;
 
     @PostMapping("/projects")
     public ResponseEntity<ProjectResponse> createProject (
