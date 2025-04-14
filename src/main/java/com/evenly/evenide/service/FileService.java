@@ -58,6 +58,7 @@ public class FileService {
     }
 
     //파일 수정 - 로그인 + 오너
+    @Transactional
     public FileResponse updateFileName(Long fileId, FileRequestDto requestDto, Long userId) {
         CodeFile file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
@@ -71,6 +72,7 @@ public class FileService {
     }
 
     //파일 삭제 - soft 아님 - 로그인 + 오너
+    @Transactional
     public void deleteFile(Long fileId, Long userId) {
         CodeFile file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
@@ -83,6 +85,7 @@ public class FileService {
     }
 
     //코드 수정 - 로그인/비로그인
+    @Transactional
     public void updateCode(Long fileId, CodeUpdateRequestDto requestDto) {
         CodeFile file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
