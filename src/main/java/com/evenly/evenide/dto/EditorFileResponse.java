@@ -13,8 +13,8 @@ public class EditorFileResponse {
     private String filename;
     private String language;
     private String content;
-    private boolean isLocked;
-    private boolean isEditLocked;
+    private Boolean isLocked;
+    private Boolean isEditLocked;
     private LocalDateTime updatedAt;
     private Long ownerId;
 

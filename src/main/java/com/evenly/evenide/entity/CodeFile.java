@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @NoArgsConstructor
@@ -40,12 +39,12 @@ public class CodeFile {
     }
 
     @Builder
-    public CodeFile(String name, String language, String content, boolean isLocked, boolean isEditLocked, Project project) {
+    public CodeFile(String name, String language, String content, Boolean isLocked, Boolean isEditLocked, Project project) {
         this.name = name;
         this.language = language;
         this.content = content;
-        this.isLocked = false;
-        this.isEditLocked = false;
+        this.isLocked = isLocked;
+        this.isEditLocked = isEditLocked;
         this.project = project;
     }
 
