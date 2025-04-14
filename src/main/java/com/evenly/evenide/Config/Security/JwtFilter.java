@@ -7,7 +7,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -21,12 +20,18 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
         throws ServletException, IOException{
 
+        System.out.println("🛡️ [JwtFilter] 필터 작동 시작!");
+        System.out.println("🛡️ [JwtFilter] 요청 URI = " + request.getRequestURI());
+
         // Authorization Header 에서 토큰 꺼내는 부분
         String token = resolveTokenFromHeader(request);
+        System.out.println("🛡️ [JwtFilter] token = " + token);
 
         if (token != null && jwtUtil.validateAccessToken(token)) {
             try {
                 String userId = jwtUtil.getUserIdFromToken(token);
+                System.out.println("🛡️ [JwtFilter] userId = " + userId);
+
                 JwtUserInfoDto userInfoDto = new JwtUserInfoDto(userId);
 
                 // 인증 객체 생성 하는 부분
