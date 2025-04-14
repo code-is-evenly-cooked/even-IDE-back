@@ -52,7 +52,7 @@ public class FileController {
     }
 
     @DeleteMapping("/{fileId}")
-    public ResponseEntity<MessageResponse> deleleFile(
+    public ResponseEntity<MessageResponse> deleteFile(
             @PathVariable Long projectId,
             @PathVariable Long fileId,
             @AuthenticationPrincipal JwtUserInfoDto userInfo
