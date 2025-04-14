@@ -12,7 +12,7 @@ import java.util.List;
 public class ProjectResponse {
     private Long id;
     private String projectName;
-    private String shareToken;
+    private String sharedUUID;
     private Long ownerId;
     private Boolean isOwner;
     private LocalDateTime createdAt;
@@ -21,7 +21,7 @@ public class ProjectResponse {
     public ProjectResponse(Project project, Long currentUserId) {
         this.id = project.getId();
         this.projectName = project.getName();
-        this.shareToken = project.getShareToken();
+        this.sharedUUID = project.getSharedUuid();
         this.ownerId = project.getOwner() != null ? project.getOwner().getId() : null;
         this.isOwner = ownerId != null && ownerId.equals(currentUserId);
         this.createdAt = project.getCreatedAt();

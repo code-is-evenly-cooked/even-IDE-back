@@ -25,7 +25,7 @@ public class Project {
     private User owner;
 
     @Column(unique = true, updatable = false)
-    private String shareToken;
+    private String sharedUuid;
 
     private LocalDateTime createdAt;
 
@@ -34,8 +34,8 @@ public class Project {
 
     @PrePersist
     public void init() {
-        if (this.shareToken == null) {
-            this.shareToken = UUID.randomUUID().toString();
+        if (this.sharedUuid == null) {
+            this.sharedUuid = UUID.randomUUID().toString();
             this.createdAt = LocalDateTime.now();
         }
     }

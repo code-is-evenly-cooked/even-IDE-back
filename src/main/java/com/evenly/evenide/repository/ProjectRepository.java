@@ -9,5 +9,5 @@ import java.util.Optional;
 
 public interface ProjectRepository extends JpaRepository<Project, Long> {
     List<Project> findAllByOwner(User owner);
-    Optional<Project> findByShareToken(String token);
+    Optional<Project> findBySharedUuid(String uuid);
 }
