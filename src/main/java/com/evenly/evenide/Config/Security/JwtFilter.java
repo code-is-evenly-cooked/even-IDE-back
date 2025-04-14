@@ -26,6 +26,8 @@ public class JwtFilter extends OncePerRequestFilter {
         if (token != null && jwtUtil.validateAccessToken(token)) {
             try {
                 String userId = jwtUtil.getUserIdFromToken(token);
+                System.out.println("🛡️ [JwtFilter] userId = " + userId);
+
                 JwtUserInfoDto userInfoDto = new JwtUserInfoDto(userId);
 
                 // 인증 객체 생성 하는 부분
