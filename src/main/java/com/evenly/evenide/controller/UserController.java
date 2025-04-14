@@ -38,17 +38,20 @@ public class UserController {
 
     // 비밀번호 변경
     @PatchMapping("/update-password")
-    public ResponseEntity<MessageResponse> updatePassword(@RequestHeader("Authorization") String token,
+    public ResponseEntity<MessageResponse> updatePassword(@AuthenticationPrincipal JwtUserInfoDto userInfo,
+                                                          HttpServletRequest request,
                                                          @RequestBody @Valid PasswordUpdateDto dto){
-        // 유저 ID 추출
-        String resolveToken = jwtUtil.resolveToken(token);
-        String userId = jwtUtil.getUserIdFromToken(resolveToken);
+
+        Long userId = Long.valueOf(userInfo.getUserId());
 
         // 비밀번호 업데이트
-        authService.updatePassword(userId, dto.getCurrentPassword(), dto.getNewPassword());
+        authService.updatePassword(String.valueOf(userId), dto.getCurrentPassword(), dto.getNewPassword());
+
+        // 유저 ID 추출
+        String token = jwtUtil.resolveToken(request);
 
         // 기존 accessToken 블랙리스트 처리
-        jwtUtil.blacklistToken(resolveToken);
+        jwtUtil.blacklistToken(token);
 
         return ResponseEntity.ok(new MessageResponse("success"));
     }
