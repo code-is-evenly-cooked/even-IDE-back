@@ -47,12 +47,16 @@ public class FileService {
 
     //파일 단건 조회 -> 에디터 진입 로그인/비로그인
     @Transactional
-    public EditorFileResponse getFile(Long fileId, Long userId) {
+    public EditorFileResponse getFile(Long projectId, Long fileId, Long userId) {
         CodeFile file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
 
         Project project = file.getProject();
         Long ownerId = project.getOwner() != null ? project.getOwner().getId() : null;
+
+        if (!file.getProject().getId().equals(projectId)) {
+            throw new CustomException(ErrorCode.INVALID_PROJECT_ACCESS);
+        }
 
         if (file.getIsLocked() && (userId == null || !userId.equals(ownerId))) {
             throw new CustomException(ErrorCode.FILE_IS_LOCKED);
@@ -63,9 +67,13 @@ public class FileService {
 
     //파일 수정 - 로그인 + 오너
     @Transactional
-    public FileResponse updateFileName(Long fileId, FileRequestDto requestDto, Long userId) {
+    public FileResponse updateFileName(Long projectId, Long fileId, FileRequestDto requestDto, Long userId) {
         CodeFile file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
+
+        if (!file.getProject().getId().equals(projectId)) {
+            throw new CustomException(ErrorCode.INVALID_PROJECT_ACCESS);
+        }
 
         if (!file.getProject().getOwner().getId().equals(userId)) {
             throw new CustomException(ErrorCode.PROJECT_OWNER_NOT_YOU);
@@ -77,9 +85,13 @@ public class FileService {
 
     //파일 삭제 - soft 아님 - 로그인 + 오너
     @Transactional
-    public void deleteFile(Long fileId, Long userId) {
+    public void deleteFile(Long projectId, Long fileId, Long userId) {
         CodeFile file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
+
+        if (!file.getProject().getId().equals(projectId)) {
+            throw new CustomException(ErrorCode.INVALID_PROJECT_ACCESS);
+        }
 
         if (!file.getProject().getOwner().getId().equals(userId)) {
             throw new CustomException(ErrorCode.PROJECT_OWNER_NOT_YOU);
@@ -90,9 +102,13 @@ public class FileService {
 
     //코드 수정 - 로그인/비로그인
     @Transactional
-    public EditorFileResponse updateCode(Long fileId, CodeUpdateRequestDto requestDto) {
+    public EditorFileResponse updateCode(Long projectId, Long fileId, CodeUpdateRequestDto requestDto) {
         CodeFile file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
+
+        if (!file.getProject().getId().equals(projectId)) {
+            throw new CustomException(ErrorCode.INVALID_PROJECT_ACCESS);
+        }
 
         if (file.getIsEditLocked()) {
             throw new CustomException(ErrorCode.CODE_EDIT_LOCKED);
