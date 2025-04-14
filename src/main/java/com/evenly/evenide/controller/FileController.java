@@ -35,7 +35,7 @@ public class FileController {
             @AuthenticationPrincipal JwtUserInfoDto userInfoDto
     ) {
         Long userId = (userInfoDto == null ? null : Long.valueOf(userInfoDto.getUserId()));
-        EditorFileResponse response = fileService.getFile(fileId, userId);
+        EditorFileResponse response = fileService.getFile(projectId, fileId, userId);
         return ResponseEntity.ok(response);
     }
 
@@ -47,7 +47,7 @@ public class FileController {
             @AuthenticationPrincipal JwtUserInfoDto userInfo
     ) {
         Long userId = Long.valueOf(userInfo.getUserId());
-        FileResponse response = fileService.updateFileName(fileId, requestDto, userId);
+        FileResponse response = fileService.updateFileName(projectId, fileId, requestDto, userId);
         return ResponseEntity.ok(response);
     }
 
@@ -58,7 +58,7 @@ public class FileController {
             @AuthenticationPrincipal JwtUserInfoDto userInfo
     ) {
         Long userId = Long.valueOf(userInfo.getUserId());
-        fileService.deleteFile(fileId, userId);
+        fileService.deleteFile(projectId, fileId, userId);
         return ResponseEntity.ok(new MessageResponse("success"));
     }
 
@@ -68,8 +68,7 @@ public class FileController {
             @PathVariable Long fileId,
             @RequestBody @Valid CodeUpdateRequestDto requestDto
     ) {
-        fileService.updateCode(fileId, requestDto);
-        EditorFileResponse response = fileService.updateCode(fileId, requestDto);
+        EditorFileResponse response = fileService.updateCode(projectId, fileId, requestDto);
         return ResponseEntity.ok(response);
     }
 }
