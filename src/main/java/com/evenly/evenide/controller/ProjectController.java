@@ -49,6 +49,17 @@ public class ProjectController {
         return ResponseEntity.ok(response);
     }
 
+    @PatchMapping("/projects/{projectId}")
+    public ResponseEntity<ProjectResponse> updateProject (
+            @PathVariable Long projectId,
+            @RequestBody @Valid ProjectRequestDto requestDto,
+            @AuthenticationPrincipal JwtUserInfoDto userInfoDto
+    ) {
+        Long userId = Long.valueOf(userInfoDto.getUserId());
+        ProjectResponse response = projectService.updateProject(projectId, requestDto, userId);
+        return ResponseEntity.ok(response);
+    }
+
     @DeleteMapping("/projects/{projectId}")
     public ResponseEntity<MessageResponse> deleteProject(
             @PathVariable Long projectId,
