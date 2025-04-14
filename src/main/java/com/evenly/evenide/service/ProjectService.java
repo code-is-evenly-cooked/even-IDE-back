@@ -69,6 +69,7 @@ public class ProjectService {
     }
 
     // 이름 수정
+    @Transactional
     public ProjectResponse updateProject(Long id, ProjectRequestDto requestDto, Long userId) {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.PROJECT_NOT_FOUND));
@@ -82,6 +83,7 @@ public class ProjectService {
     }
 
     // 삭제
+    @Transactional
     public void deleteProject(Long id, Long userId) {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.PROJECT_NOT_FOUND));
