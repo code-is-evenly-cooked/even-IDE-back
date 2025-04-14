@@ -3,6 +3,7 @@ package com.evenly.evenide.Config.Security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -29,6 +30,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> request
                         .requestMatchers("/mock/**").permitAll() // mock api
                         .requestMatchers("/auth/**").permitAll() // 로그인, 회원가입 인증 없이
+                        .requestMatchers(HttpMethod.GET, "/projects/*", "/projects/*/files/*").permitAll() // 프로젝트, 파일 단건 조회 인증 없이
+                        .requestMatchers(HttpMethod.PATCH, "/projects/*/files/*/code").permitAll() // 코드 수정 인증 없이
                         .anyRequest().authenticated() // 그외 모든 요청은 인증 필요
                 )
                 .addFilterBefore(new JwtFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
