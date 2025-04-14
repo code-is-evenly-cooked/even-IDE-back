@@ -28,12 +28,16 @@ public class ProjectService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
+        String name = (requestDto.getProjectName() == null || requestDto.getProjectName().isBlank())
+                ? "프로젝트"
+                : requestDto.getProjectName();
+
         if (!user.getId().equals(requestDto.getOwnerId())) {
             throw new CustomException(ErrorCode.PROJECT_OWNER_NOT_YOU);
         }
 
         Project project = Project.builder()
-                .name(requestDto.getProjectName())
+                .name(name)
                 .owner(user)
                 .build();
 

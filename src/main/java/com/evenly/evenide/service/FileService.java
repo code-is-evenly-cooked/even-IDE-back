@@ -23,12 +23,16 @@ public class FileService {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PROJECT_NOT_FOUND));
 
+        String name = (requestDto.getFileName()) == null || requestDto.getFileName().isBlank()
+                ? "파일"
+                : requestDto.getFileName();
+
         if (!project.getOwner().getId().equals(userId)) {
             throw new CustomException(ErrorCode.PROJECT_OWNER_NOT_YOU);
         }
 
         CodeFile file = CodeFile.builder()
-                .name(requestDto.getFileName())
+                .name(name)
                 .language("javascript")
                 .content("")
                 .isLocked(false)
