@@ -84,7 +84,7 @@ public class JwtUtil {
         return parseClaims(token, accessKey).getSubject();
     }
 
-    private String resolveToken(HttpServletRequest request) {
+    public String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7).trim();
@@ -92,6 +92,7 @@ public class JwtUtil {
         return null;
     }
 
+    // 컨트롤러에서 @RequestHeader(value = "Authorization") String token 방식으로 사용할 때 필요
     public String resolveToken(String token) {
         if (token != null && token.startsWith("Bearer ")) {
             return token.substring(7).trim();
