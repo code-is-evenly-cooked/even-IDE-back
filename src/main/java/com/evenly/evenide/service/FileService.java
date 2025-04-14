@@ -90,7 +90,7 @@ public class FileService {
 
     //코드 수정 - 로그인/비로그인
     @Transactional
-    public void updateCode(Long fileId, CodeUpdateRequestDto requestDto) {
+    public EditorFileResponse updateCode(Long fileId, CodeUpdateRequestDto requestDto) {
         CodeFile file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
 
@@ -98,5 +98,6 @@ public class FileService {
             throw new CustomException(ErrorCode.CODE_EDIT_LOCKED);
         }
         file.updateCode(requestDto.getLanguage(), requestDto.getContent());
+        return new EditorFileResponse(file);
     }
 }
