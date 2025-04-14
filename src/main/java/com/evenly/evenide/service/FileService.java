@@ -116,4 +116,40 @@ public class FileService {
         file.updateCode(requestDto.getLanguage(), requestDto.getContent());
         return new EditorFileResponse(file);
     }
+
+    //파일 잠금, 해제
+    @Transactional
+    public FileResponse updateLock(Long projectId, Long fileId, Long userId) {
+        CodeFile file = fileRepository.findById(fileId)
+                .orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
+
+        if (!file.getProject().getId().equals(projectId)) {
+            throw new CustomException(ErrorCode.INVALID_PROJECT_ACCESS);
+        }
+
+        if (!file.getProject().getOwner().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.PROJECT_OWNER_NOT_YOU);
+        }
+
+        file.updateLock();
+        return new FileResponse(file);
+    }
+
+    //코드 수정 잠금, 해제
+    @Transactional
+    public FileResponse updateEditLock(Long projectId, Long fileId, Long userId) {
+        CodeFile file = fileRepository.findById(fileId)
+                .orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
+
+        if (!file.getProject().getId().equals(projectId)) {
+            throw new CustomException(ErrorCode.INVALID_PROJECT_ACCESS);
+        }
+
+        if (!file.getProject().getOwner().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.PROJECT_OWNER_NOT_YOU);
+        }
+
+        file.updateEditLock();
+        return new FileResponse(file);
+    }
 }

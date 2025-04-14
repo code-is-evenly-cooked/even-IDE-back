@@ -71,4 +71,27 @@ public class FileController {
         EditorFileResponse response = fileService.updateCode(projectId, fileId, requestDto);
         return ResponseEntity.ok(response);
     }
+
+    @PatchMapping("/{fileId}/lock")
+    public ResponseEntity<FileResponse> updateLock(
+            @PathVariable Long projectId,
+            @PathVariable Long fileId,
+            @AuthenticationPrincipal JwtUserInfoDto userInfoDto
+    ) {
+        Long userId = Long.valueOf(userInfoDto.getUserId());
+        FileResponse response = fileService.updateLock(projectId, fileId, userId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{fileId}/edit/lock")
+    public ResponseEntity<FileResponse> updateEditLock(
+            @PathVariable Long projectId,
+            @PathVariable Long fileId,
+            @AuthenticationPrincipal JwtUserInfoDto userInfoDto
+    ) {
+        Long userId = Long.valueOf(userInfoDto.getUserId());
+        FileResponse response = fileService.updateEditLock(projectId, fileId, userId);
+        return ResponseEntity.ok(response);
+    }
+
 }
