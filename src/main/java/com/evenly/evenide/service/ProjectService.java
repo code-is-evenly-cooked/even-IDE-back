@@ -24,8 +24,8 @@ public class ProjectService {
     private final UserRepository userRepository;
 
     //로그인 사용자 프로젝트 생성
-    public ProjectResponse createProject(ProjectRequestDto requestDto, String email) {
-        User user = userRepository.findByEmail(email)
+    public ProjectResponse createProject(ProjectRequestDto requestDto, Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         if (!user.getId().equals(requestDto.getOwnerId())) {
@@ -46,22 +46,22 @@ public class ProjectService {
 
     // 내 전체 프로젝트 조회 (사이드바용)
     @Transactional
-    public List<ProjectResponse> getMyProjects(String email) {
-        User user = userRepository.findByEmail(email)
+    public List<ProjectResponse> getMyProjects(Long userId) {
+        User owner = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        return projectRepository.findAllByOwner(user).stream()
-                .map(p -> new ProjectResponse(p, user.getId()))
+        return projectRepository.findAllByOwner(owner).stream()
+                .map(p -> new ProjectResponse(p, owner.getId()))
                 .collect(Collectors.toList());
     }
 
-    // 공유 링크 단건 조회
+    // 공유 링크 프로젝트 단건 조회
     @Transactional
-    public ProjectResponse getSharedProject(String token, Long currentUserId) {
-        Project project = projectRepository.findByShareToken(token)
+    public ProjectResponse getSharedProject(String uuid, Long userId) {
+        Project project = projectRepository.findBySharedUuid(uuid)
                 .orElseThrow(() -> new CustomException(ErrorCode.PROJECT_NOT_FOUND));
 
-        return new ProjectResponse(project, currentUserId);
+        return new ProjectResponse(project, userId);
     }
 
     // 이름 수정
