@@ -49,4 +49,8 @@ public class User {
         user.provider = "local";
         return user;
     }
+
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
 }

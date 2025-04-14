@@ -18,7 +18,8 @@ public enum ErrorCode {
     FILE_IS_LOCKED(HttpStatus.FORBIDDEN,"잠겨있는 파일입니다. 파일 주인만 열람이 가능합니다."),
     CODE_EDIT_LOCKED(HttpStatus.FORBIDDEN,"코드 수정이 잠겨있습니다. 파일 주인만 수정이 가능합니다."),
 
-    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "로그인 인증이 필요합니다.");
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "로그인 인증이 필요합니다."),
+    SAME_PASSWORD(HttpStatus.BAD_REQUEST, "기존 비밀번호와 새 비밀번호가 동일합니다.");
 
 
 
