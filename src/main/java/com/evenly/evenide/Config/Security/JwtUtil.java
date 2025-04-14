@@ -9,10 +9,13 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Value;
 import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class JwtUtil {
@@ -20,14 +23,17 @@ public class JwtUtil {
     private final Key refreshKey;
     private final long accessTokenExpireTime;
     private final long refreshTokenExpireTime;
+    private final RedisTemplate<String,String> redisTemplate;
 
     private JwtUtil(@Value("${jwt.secret}") String accessSecretKey,
                     @Value("${jwt.refresh_secret}") String refreshSecretKey,
-                    @Value("${jwt.expiration_time}") long accessTokenExpireTime) {
-        this.accessKey = Keys.hmacShaKeyFor(accessSecretKey.getBytes());
-        this.refreshKey = Keys.hmacShaKeyFor(refreshSecretKey.getBytes());
+                    @Value("${jwt.expiration_time}") long accessTokenExpireTime,
+                    RedisTemplate<String,String> redisTemplate) {
+        this.accessKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(accessSecretKey));
+        this.refreshKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(refreshSecretKey));
         this.accessTokenExpireTime = accessTokenExpireTime * 60 * 1000L;
         this.refreshTokenExpireTime = 3 * 24 * 60 * 60 * 1000L;
+        this.redisTemplate = redisTemplate;
     }
 
     public String[] generateToken(JwtUserInfoDto user) {
@@ -54,11 +60,15 @@ public class JwtUtil {
         return generateToken(new JwtUserInfoDto(userId), accessKey, accessTokenExpireTime);
     }
 
-    private boolean validateRefreshToken(String token) {
+    public boolean validateRefreshToken(String token) {
         return validateToken(token, refreshKey);
     }
 
-    public boolean validateAccessToken(String token) {
+    public boolean validateAccessToken(String token){
+        if (isBlacklisted(token)) {
+            System.out.println("블랙리스트 처리된 토큰입니다");
+            return false;
+        }
         return validateToken(token, accessKey);
     }
 
@@ -92,6 +102,10 @@ public class JwtUtil {
         return null;
     }
 
+    public String getUserIdFromRefreshToken(String token) {
+        return parseClaims(token, refreshKey).getSubject();
+    }
+
     // 컨트롤러에서 @RequestHeader(value = "Authorization") String token 방식으로 사용할 때 필요
     public String resolveToken(String token) {
         if (token != null && token.startsWith("Bearer ")) {
@@ -108,4 +122,15 @@ public class JwtUtil {
                 .getBody()
                 .getExpiration();
     }
+
+    public boolean isBlacklisted(String token) {
+        String value = redisTemplate.opsForValue().get("blacklist:" + token);
+        return value != null;
+    }
+
+    public void blacklistToken(String token) {
+        long expiration = getExpiredTime(token).getTime() - System.currentTimeMillis();
+        redisTemplate.opsForValue().set("blacklist:" + token, "logout", expiration, TimeUnit.MILLISECONDS);
+    }
+
 }
