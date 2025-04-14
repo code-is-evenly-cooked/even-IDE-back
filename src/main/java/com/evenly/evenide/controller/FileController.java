@@ -66,7 +66,7 @@ public class FileController {
     public ResponseEntity<EditorFileResponse> updateCode(
             @PathVariable Long projectId,
             @PathVariable Long fileId,
-            @RequestBody @Valid CodeUpdateRequestDto requestDto
+            @RequestBody @Valid CodeExecutionRequestDto requestDto
     ) {
         EditorFileResponse response = fileService.updateCode(projectId, fileId, requestDto);
         return ResponseEntity.ok(response);

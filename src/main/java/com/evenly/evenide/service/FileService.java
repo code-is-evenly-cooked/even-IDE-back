@@ -102,7 +102,7 @@ public class FileService {
 
     //코드 수정 - 로그인/비로그인
     @Transactional
-    public EditorFileResponse updateCode(Long projectId, Long fileId, CodeUpdateRequestDto requestDto) {
+    public EditorFileResponse updateCode(Long projectId, Long fileId, CodeExecutionRequestDto requestDto) {
         CodeFile file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
 

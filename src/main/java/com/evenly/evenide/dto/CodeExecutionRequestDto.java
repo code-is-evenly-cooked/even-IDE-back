@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CodeUpdateRequestDto {
+public class CodeExecutionRequestDto {
 
     @NotBlank
     private String language;
