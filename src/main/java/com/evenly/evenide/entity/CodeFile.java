@@ -57,4 +57,12 @@ public class CodeFile {
         this.name = name;
     }
 
+    public void updateLock() {
+        this.isLocked = !this.isLocked;
+    }
+
+    public void updateEditLock() {
+        this.isEditLocked = !this.isEditLocked;
+    }
+
 }
