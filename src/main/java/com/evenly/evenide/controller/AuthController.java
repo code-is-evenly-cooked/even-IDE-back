@@ -1,6 +1,6 @@
 package com.evenly.evenide.controller;
 
-import com.evenly.evenide.Config.Security.JwtUtil;
+import com.evenly.evenide.config.security.JwtUtil;
 import com.evenly.evenide.dto.SignInDto;
 import com.evenly.evenide.dto.SignUpDto;
 import com.evenly.evenide.dto.SignUpResponse;

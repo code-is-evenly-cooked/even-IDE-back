@@ -1,6 +1,6 @@
 package com.evenly.evenide.service;
 
-import com.evenly.evenide.Config.Security.JwtUtil;
+import com.evenly.evenide.config.security.JwtUtil;
 import com.evenly.evenide.dto.JwtUserInfoDto;
 import com.evenly.evenide.dto.SignInDto;
 import com.evenly.evenide.dto.SignUpDto;
@@ -11,7 +11,6 @@ import com.evenly.evenide.global.exception.ErrorCode;
 import com.evenly.evenide.repository.RefreshTokenRepository;
 import com.evenly.evenide.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

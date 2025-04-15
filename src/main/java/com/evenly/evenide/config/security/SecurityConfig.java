@@ -1,4 +1,4 @@
-package com.evenly.evenide.Config.Security;
+package com.evenly.evenide.config.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

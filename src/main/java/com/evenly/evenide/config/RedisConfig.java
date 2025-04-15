@@ -1,4 +1,4 @@
-package com.evenly.evenide.Config;
+package com.evenly.evenide.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

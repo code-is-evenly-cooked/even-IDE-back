@@ -1,4 +1,4 @@
-package com.evenly.evenide.Config.Security;
+package com.evenly.evenide.config.security;
 
 import com.evenly.evenide.dto.JwtUserInfoDto;
 import com.evenly.evenide.global.exception.CustomException;
