@@ -4,19 +4,22 @@ import com.evenly.evenide.Config.Security.JwtUtil;
 import com.evenly.evenide.dto.JwtUserInfoDto;
 import com.evenly.evenide.dto.SignInDto;
 import com.evenly.evenide.dto.SignUpDto;
+import com.evenly.evenide.entity.PasswordResetToken;
 import com.evenly.evenide.entity.RefreshToken;
 import com.evenly.evenide.entity.User;
 import com.evenly.evenide.global.exception.CustomException;
 import com.evenly.evenide.global.exception.ErrorCode;
+import com.evenly.evenide.repository.PasswordResetTokenRepository;
 import com.evenly.evenide.repository.RefreshTokenRepository;
 import com.evenly.evenide.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +29,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final EmailService emailService;
 
     public User signup(SignUpDto signUpDto) {
 
@@ -169,6 +174,33 @@ public class AuthService {
         user.updatePassword(encodedPassword);
 
         refreshTokenRepository.deleteByUserId(user.getId());
+    }
+
+    // 비밀번호 재설정 - 이메일 전송 하는 부분
+    @Transactional
+    public void sendResetEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        // 기존 토큰 삭제
+        passwordResetTokenRepository.deleteByUser(user);
+
+        // 토큰 생성
+        String token = UUID.randomUUID().toString();
+
+        // 토큰 저장
+        PasswordResetToken resetToken = PasswordResetToken.builder()
+                .user(user)
+                .token(token)
+                .expiration(LocalDateTime.now().plusMinutes(10))
+                .build();
+
+        passwordResetTokenRepository.save(resetToken);
+
+        String resetUrl = "http://localhost:8080/reset-password?token=" + token;    // 배포때 주소 수정 필요함(현재는 로컬이라 괜찮습니다.)
+        emailService.sendResetPasswordEmail(user.getEmail(), resetUrl);
+
+
     }
 
 }
