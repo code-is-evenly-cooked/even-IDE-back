@@ -184,7 +184,7 @@ public class AuthService {
 
         // 기존 토큰 삭제
         passwordResetTokenRepository.deleteByUser(user);
-
+        passwordResetTokenRepository.flush();
         // 토큰 생성
         String token = UUID.randomUUID().toString();
 
