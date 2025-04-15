@@ -200,7 +200,27 @@ public class AuthService {
         String resetUrl = "http://localhost:8080/reset-password?token=" + token;    // 배포때 주소 수정 필요함(현재는 로컬이라 괜찮습니다.)
         emailService.sendResetPasswordEmail(user.getEmail(), resetUrl);
 
-
     }
+
+    // 비밀번호 재설정 - 링크 접속 후 비밀번호 변경하는 부분
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+
+        // 토큰 없음
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_PASSWORD_RESET_TOKEN));
+
+        // 토큰 만료
+        if (resetToken.getExpiration().isBefore(LocalDateTime.now())) {
+            throw new CustomException(ErrorCode.EXPIRED_PASSWORD_RESET_TOKEN);
+        }
+
+        User user = resetToken.getUser();
+        user.updatePassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        passwordResetTokenRepository.delete(resetToken);
+    }
+
 
 }
