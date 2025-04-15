@@ -1,9 +1,7 @@
 package com.evenly.evenide.controller;
 
 import com.evenly.evenide.Config.Security.JwtUtil;
-import com.evenly.evenide.dto.SignInDto;
-import com.evenly.evenide.dto.SignUpDto;
-import com.evenly.evenide.dto.SignUpResponse;
+import com.evenly.evenide.dto.*;
 import com.evenly.evenide.entity.User;
 import com.evenly.evenide.global.response.MessageResponse;
 import com.evenly.evenide.repository.RefreshTokenRepository;
@@ -69,4 +67,12 @@ public class AuthController {
         refreshTokenRepository.deleteById(Long.valueOf(userId));
         return ResponseEntity.ok(new MessageResponse("success"));
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<MessageResponse> forgotPassword(@RequestBody EmailRequestDto userInfoDto){
+        authService.sendResetEmail(userInfoDto.getEmail());
+        return ResponseEntity.ok(new MessageResponse("success"));
+    }
+
+
 }
