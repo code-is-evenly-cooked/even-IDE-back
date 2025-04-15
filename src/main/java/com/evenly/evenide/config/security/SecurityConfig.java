@@ -33,6 +33,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/projects/*", "/projects/*/files/*").permitAll() // 프로젝트, 파일 단건 조회 인증 없이
                         .requestMatchers(HttpMethod.PATCH, "/projects/*/files/*/code").permitAll() // 코드 수정 인증 없이
                         .requestMatchers(HttpMethod.POST, "/code/execute").permitAll()// 코드 실행 인증 없이
+                        .requestMatchers(
+                                "/chat-test.html",
+                                "/ws/**",
+                                "/chat/join",
+                                "/topic/**",
+                                "/app/**").permitAll() // 웹소켓
                         .anyRequest().authenticated() // 그외 모든 요청은 인증 필요
                 )
                 .addFilterBefore(new JwtFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
