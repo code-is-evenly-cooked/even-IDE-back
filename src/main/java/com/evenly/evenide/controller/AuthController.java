@@ -1,10 +1,7 @@
 package com.evenly.evenide.controller;
 
 import com.evenly.evenide.Config.Security.JwtUtil;
-import com.evenly.evenide.dto.SignInDto;
-import com.evenly.evenide.dto.SignInResponse;
-import com.evenly.evenide.dto.SignUpDto;
-import com.evenly.evenide.dto.SignUpResponse;
+import com.evenly.evenide.dto.*;
 import com.evenly.evenide.entity.User;
 import com.evenly.evenide.global.response.MessageResponse;
 import com.evenly.evenide.repository.RefreshTokenRepository;
@@ -15,8 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -68,4 +63,17 @@ public class AuthController {
         refreshTokenRepository.deleteById(Long.valueOf(userId));
         return ResponseEntity.ok(new MessageResponse("success"));
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<MessageResponse> forgotPassword(@RequestBody @Valid EmailRequestDto userInfoDto){
+        authService.sendResetEmail(userInfoDto.getEmail());
+        return ResponseEntity.ok(new MessageResponse("success"));
+    }
+
+    @PostMapping("/password-reset")
+    public ResponseEntity<MessageResponse> resetPassword(@RequestBody @Valid PasswordResetRequestDto requestDto){
+        authService.resetPassword(requestDto.getToken(), requestDto.getNewPassword());
+        return ResponseEntity.ok(new MessageResponse("success"));
+    }
+
 }
