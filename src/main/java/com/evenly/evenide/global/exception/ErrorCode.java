@@ -10,6 +10,8 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "가입되지 않은 사용자 입니다."),
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다."),
     INVALID_REFRESH_TOKEN(HttpStatus.BAD_REQUEST, "Refresh token이 만료되었습니다. 다시 로그인하세요."),
+    INVALID_PASSWORD_RESET_TOKEN(HttpStatus.BAD_REQUEST, "유효하지 않은 비밀번호 재설정 토큰입니다."),
+    EXPIRED_PASSWORD_RESET_TOKEN(HttpStatus.BAD_REQUEST, "만료된 비밀번호 재설정 토큰입니다."),
 
     PROJECT_NOT_FOUND(HttpStatus.NOT_FOUND, "프로젝트를 찾을 수 없습니다."),
     PROJECT_OWNER_NOT_YOU(HttpStatus.FORBIDDEN,"프로젝트 주인이 아닙니다."),
