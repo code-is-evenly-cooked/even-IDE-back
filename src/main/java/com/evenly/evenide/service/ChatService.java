@@ -1,18 +1,35 @@
 package com.evenly.evenide.service;
 
 import com.evenly.evenide.dto.ChatMessage;
+import com.evenly.evenide.dto.RedisChatMessageDto;
 import com.evenly.evenide.global.util.RandomNameGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatService {
 
     private final SimpMessageSendingOperations messageSendingOperations;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final ObjectMapper objectMapper;
 
     public void sendMessage(ChatMessage message) {
+        if (message.getSender().startsWith("anon-")) {
+            saveToRedis(message);
+        }
+
         String destination = "/topic/project/" + message.getProjectId();
         messageSendingOperations.convertAndSend(destination,message);
     }
@@ -26,5 +43,44 @@ public class ChatService {
         message.setContent(message.getNickname() + "님이 입장했습니다.");
         String destination = "/topic/project/" + message.getProjectId();
         messageSendingOperations.convertAndSend(destination, message);
+    }
+
+    public void saveToRedis(ChatMessage message) {
+        String key = "chat:" + message.getProjectId();
+
+        RedisChatMessageDto messageDto = RedisChatMessageDto.builder()
+                .type(message.getType().name())
+                .projectId(message.getProjectId())
+                .sender(message.getSender())
+                .nickname(message.getNickname())
+                .content(message.getContent())
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        try {
+            String json = objectMapper.writeValueAsString(messageDto);
+            redisTemplate.opsForList().rightPush(key, json);
+
+        } catch (JsonProcessingException e) {
+            log.error("Redis 메시지 역직렬화 실패", e);
+        }
+    }
+
+    public List<RedisChatMessageDto> getRedisMessages(String projectId) {
+        String key = "chat:" + projectId;
+
+        List<String> rawMessages = redisTemplate.opsForList().range(key, 0, -1);
+
+        return rawMessages.stream()
+                .map(json -> {
+                    try {
+                        return objectMapper.readValue(json, RedisChatMessageDto.class);
+                    } catch (JsonProcessingException e) {
+                        log.error("Redis 메시지 역직렬화 실패", e);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .toList();
     }
 }
