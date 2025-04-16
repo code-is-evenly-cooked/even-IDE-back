@@ -48,19 +48,15 @@ public class ChatService {
     public void saveToRedis(ChatMessage message) {
         String key = "chat:" + message.getProjectId();
 
-        RedisChatMessageDto messageDto = RedisChatMessageDto.builder()
-                .type(message.getType().name())
-                .projectId(message.getProjectId())
-                .sender(message.getSender())
-                .nickname(message.getNickname())
-                .content(message.getContent())
-                .timestamp(LocalDateTime.now())
-                .build();
+        if (message.getTimestamp() == null) {
+            message.setTimestamp(LocalDateTime.now());
+        }
 
         try {
-            String json = objectMapper.writeValueAsString(messageDto);
-            redisTemplate.opsForList().rightPush(key, json);
-
+            String json = objectMapper.writeValueAsString(message);
+            long score = message.getTimestamp()
+                            .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+            redisTemplate.opsForZSet().add(key, json, score);
         } catch (JsonProcessingException e) {
             log.error("Redis 메시지 역직렬화 실패", e);
         }
