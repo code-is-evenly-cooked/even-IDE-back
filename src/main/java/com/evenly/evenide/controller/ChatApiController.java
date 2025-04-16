@@ -1,9 +1,7 @@
 package com.evenly.evenide.controller;
 
-import com.evenly.evenide.dto.ChatEnterRequestDto;
-import com.evenly.evenide.dto.ChatJoinResponse;
-import com.evenly.evenide.dto.JwtUserInfoDto;
-import com.evenly.evenide.dto.RedisChatMessageDto;
+import com.evenly.evenide.config.security.JwtUtil;
+import com.evenly.evenide.dto.*;
 import com.evenly.evenide.entity.User;
 import com.evenly.evenide.global.exception.CustomException;
 import com.evenly.evenide.global.exception.ErrorCode;
@@ -24,6 +22,7 @@ public class ChatApiController {
 
     private final ChatService chatService;
     private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
 
     @PostMapping("/join")
     public ResponseEntity<ChatJoinResponse> join(
@@ -59,7 +58,10 @@ public class ChatApiController {
     }
 
     @GetMapping("/history")
-    public ResponseEntity<List<RedisChatMessageDto>> getChatHistory(@RequestParam String projectId) {
-        return ResponseEntity.ok(chatService.getRedisMessages(projectId));
+    public ResponseEntity<List<ChatMessage>> getChatHistory(
+            @RequestParam String projectId,
+            @RequestHeader(value = "Authorization", required = false) String token
+    ) {
+        return ResponseEntity.ok(chatService.getRedisMessages(projectId, jwtUtil.resolveToken(token)));
     }
 }
