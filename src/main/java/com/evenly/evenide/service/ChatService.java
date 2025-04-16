@@ -1,7 +1,7 @@
 package com.evenly.evenide.service;
 
+import com.evenly.evenide.config.security.JwtUtil;
 import com.evenly.evenide.dto.ChatMessage;
-import com.evenly.evenide.dto.RedisChatMessageDto;
 import com.evenly.evenide.global.util.RandomNameGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,10 +11,13 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -61,15 +64,27 @@ public class ChatService {
         }
     }
 
-    public List<RedisChatMessageDto> getRedisMessages(String projectId) {
+    public List<ChatMessage> getRedisMessages(String projectId, String token) {
+        boolean isAnon;
+        try {
+            isAnon = (token == null || !jwtUtil.validateAccessToken(token));
+        } catch (Exception e) {
+            isAnon = true;
+        }
         String key = "chat:" + projectId;
 
-        List<String> rawMessages = redisTemplate.opsForList().range(key, 0, -1);
+        long now = Instant.now().toEpochMilli();
 
-        return rawMessages.stream()
+        long threshold = isAnon
+                ? now - 1000L * 60 * 60 * 24
+                : now - 1000L * 60 * 60 * 24 * 3;
+        Set<String> jsonSet = redisTemplate.opsForZSet().rangeByScore(key, threshold, now);
+        List<String> jsonList = new ArrayList<>(jsonSet);
+
+        return jsonList.stream()
                 .map(json -> {
                     try {
-                        return objectMapper.readValue(json, RedisChatMessageDto.class);
+                        return objectMapper.readValue(json, ChatMessage.class);
                     } catch (JsonProcessingException e) {
                         log.error("Redis 메시지 역직렬화 실패", e);
                         return null;
