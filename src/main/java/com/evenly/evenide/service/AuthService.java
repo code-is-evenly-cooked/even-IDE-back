@@ -3,19 +3,24 @@ package com.evenly.evenide.service;
 import com.evenly.evenide.config.security.JwtUtil;
 import com.evenly.evenide.dto.JwtUserInfoDto;
 import com.evenly.evenide.dto.SignInDto;
+import com.evenly.evenide.dto.SignInResponse;
 import com.evenly.evenide.dto.SignUpDto;
+import com.evenly.evenide.entity.PasswordResetToken;
 import com.evenly.evenide.entity.RefreshToken;
 import com.evenly.evenide.entity.User;
 import com.evenly.evenide.global.exception.CustomException;
 import com.evenly.evenide.global.exception.ErrorCode;
+import com.evenly.evenide.repository.PasswordResetTokenRepository;
 import com.evenly.evenide.repository.RefreshTokenRepository;
 import com.evenly.evenide.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +30,11 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final EmailService emailService;
+
+    @Value("${app.reset.url}")
+    private String resetBaseUrl;
 
     public User signup(SignUpDto signUpDto) {
 
@@ -63,7 +73,8 @@ public class AuthService {
     }
 
     // 로그인 부분
-    public Map<String, String> login(SignInDto signInDto) {
+    @Transactional
+    public SignInResponse login(SignInDto signInDto) {
 
         // 가입되지 않은 사용자 일때
         User user = userRepository.findByEmail(signInDto.getEmail())
@@ -94,14 +105,17 @@ public class AuthService {
                                 .build()
                         )
                 );
-        return Map.of(
-                "accessToken", accessToken,
-                "refreshToken", refreshToken
+        return new SignInResponse(
+                accessToken,
+                refreshToken,
+                user.getId(),
+                user.getNickname(),
+                user.getProvider()
         );
     }
 
     // refresh 부분
-    public Map<String, String> refresh(String refreshToken) {
+    public SignInResponse refresh(String refreshToken) {
 
         // 유효성 검사
         if (!jwtUtil.validateRefreshToken(refreshToken)) {
@@ -125,14 +139,17 @@ public class AuthService {
 
         // 새 토큰 생성
         String newAccessToken = jwtUtil.renewAccessToken(refreshToken);
-        String newRefreshToekn = jwtUtil.generateToken(new JwtUserInfoDto(userId))[1];
+        String newRefreshToken = jwtUtil.generateToken(new JwtUserInfoDto(userId))[1];
 
-        // RefreshToekn 갱신
-        saved.updateToken(newRefreshToekn);
+        // RefreshToken 갱신
+        saved.updateToken(newRefreshToken);
 
-        return Map.of(
-                "accessToken", newAccessToken,
-                "refreshToken", newRefreshToekn
+        return new SignInResponse(
+                newAccessToken,
+                newRefreshToken,
+                user.getId(),
+                user.getNickname(),
+                user.getProvider()
         );
     }
 
@@ -169,5 +186,53 @@ public class AuthService {
 
         refreshTokenRepository.deleteByUserId(user.getId());
     }
+
+    // 비밀번호 재설정 - 이메일 전송 하는 부분
+    @Transactional
+    public void sendResetEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        // 기존 토큰 삭제
+        passwordResetTokenRepository.deleteByUser(user);
+        passwordResetTokenRepository.flush();
+        // 토큰 생성
+        String token = UUID.randomUUID().toString();
+
+        // 토큰 저장
+        PasswordResetToken resetToken = PasswordResetToken.builder()
+                .user(user)
+                .token(token)
+                .expiration(LocalDateTime.now().plusMinutes(10))
+                .build();
+
+        passwordResetTokenRepository.save(resetToken);
+
+        String resetUrl = resetBaseUrl + "/reset-password?token=" + token;
+        emailService.sendResetPasswordEmail(user.getEmail(), resetUrl);
+
+    }
+
+    // 비밀번호 재설정 - 링크 접속 후 비밀번호 변경하는 부분
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+
+        // 토큰 없음
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_PASSWORD_RESET_TOKEN));
+
+        // 토큰 만료
+        if (resetToken.getExpiration().isBefore(LocalDateTime.now())) {
+            throw new CustomException(ErrorCode.EXPIRED_PASSWORD_RESET_TOKEN);
+        }
+
+        User user = resetToken.getUser();
+        user.updatePassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        passwordResetTokenRepository.delete(resetToken);
+    }
+
+
 
 }
