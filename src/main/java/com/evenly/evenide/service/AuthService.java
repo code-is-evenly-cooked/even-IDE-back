@@ -13,6 +13,7 @@ import com.evenly.evenide.repository.PasswordResetTokenRepository;
 import com.evenly.evenide.repository.RefreshTokenRepository;
 import com.evenly.evenide.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,9 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
+
+    @Value("${app.reset.url}")
+    private String resetBaseUrl;
 
     public User signup(SignUpDto signUpDto) {
 
@@ -197,7 +201,7 @@ public class AuthService {
 
         passwordResetTokenRepository.save(resetToken);
 
-        String resetUrl = "http://localhost:8080/reset-password?token=" + token;    // 배포때 주소 수정 필요함(현재는 로컬이라 괜찮습니다.)
+        String resetUrl = resetBaseUrl + "/reset-password?token=" + token;
         emailService.sendResetPasswordEmail(user.getEmail(), resetUrl);
 
     }
