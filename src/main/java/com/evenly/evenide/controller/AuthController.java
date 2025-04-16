@@ -7,14 +7,11 @@ import com.evenly.evenide.global.response.MessageResponse;
 import com.evenly.evenide.repository.RefreshTokenRepository;
 import com.evenly.evenide.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -45,16 +42,15 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody @Valid SignInDto signInDto, HttpServletResponse response){
-        Map<String, String> tokens = authService.login(signInDto);
-        return ResponseEntity.ok(tokens);
+    public ResponseEntity<SignInResponse> login(@RequestBody @Valid SignInDto signInDto){
+        return ResponseEntity.ok(authService.login(signInDto));
 
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<Map<String,String>> refreshToken(@RequestHeader("Authorization")String token){
+    public ResponseEntity<SignInResponse> refreshToken(@RequestHeader("Authorization")String token){
         String refreshToken = jwtUtil.resolveToken(token);
-        Map<String, String> newTokens = authService.refresh(refreshToken);
+        SignInResponse newTokens = authService.refresh(refreshToken);
         return ResponseEntity.ok(newTokens);
     }
 

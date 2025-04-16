@@ -3,6 +3,7 @@ package com.evenly.evenide.service;
 import com.evenly.evenide.Config.Security.JwtUtil;
 import com.evenly.evenide.dto.JwtUserInfoDto;
 import com.evenly.evenide.dto.SignInDto;
+import com.evenly.evenide.dto.SignInResponse;
 import com.evenly.evenide.dto.SignUpDto;
 import com.evenly.evenide.entity.PasswordResetToken;
 import com.evenly.evenide.entity.RefreshToken;
@@ -19,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -73,7 +73,8 @@ public class AuthService {
     }
 
     // 로그인 부분
-    public Map<String, String> login(SignInDto signInDto) {
+    @Transactional
+    public SignInResponse login(SignInDto signInDto) {
 
         // 가입되지 않은 사용자 일때
         User user = userRepository.findByEmail(signInDto.getEmail())
@@ -104,14 +105,17 @@ public class AuthService {
                                 .build()
                         )
                 );
-        return Map.of(
-                "accessToken", accessToken,
-                "refreshToken", refreshToken
+        return new SignInResponse(
+                accessToken,
+                refreshToken,
+                user.getId(),
+                user.getNickname(),
+                user.getProvider()
         );
     }
 
     // refresh 부분
-    public Map<String, String> refresh(String refreshToken) {
+    public SignInResponse refresh(String refreshToken) {
 
         // 유효성 검사
         if (!jwtUtil.validateRefreshToken(refreshToken)) {
@@ -135,14 +139,17 @@ public class AuthService {
 
         // 새 토큰 생성
         String newAccessToken = jwtUtil.renewAccessToken(refreshToken);
-        String newRefreshToekn = jwtUtil.generateToken(new JwtUserInfoDto(userId))[1];
+        String newRefreshToken = jwtUtil.generateToken(new JwtUserInfoDto(userId))[1];
 
-        // RefreshToekn 갱신
-        saved.updateToken(newRefreshToekn);
+        // RefreshToken 갱신
+        saved.updateToken(newRefreshToken);
 
-        return Map.of(
-                "accessToken", newAccessToken,
-                "refreshToken", newRefreshToekn
+        return new SignInResponse(
+                newAccessToken,
+                newRefreshToken,
+                user.getId(),
+                user.getNickname(),
+                user.getProvider()
         );
     }
 
@@ -225,6 +232,7 @@ public class AuthService {
 
         passwordResetTokenRepository.delete(resetToken);
     }
+
 
 
 }
