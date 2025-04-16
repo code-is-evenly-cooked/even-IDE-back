@@ -37,6 +37,7 @@ public class SecurityConfig {
                                 "/chat-test.html",
                                 "/ws/**",
                                 "/chat/join",
+                                "/chat/history",
                                 "/topic/**",
                                 "/app/**").permitAll() // 웹소켓
                         .anyRequest().authenticated() // 그외 모든 요청은 인증 필요
