@@ -24,11 +24,10 @@ public class ChatService {
     private final SimpMessageSendingOperations messageSendingOperations;
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
+    private final JwtUtil jwtUtil;
 
     public void sendMessage(ChatMessage message) {
-        if (message.getSender().startsWith("anon-")) {
-            saveToRedis(message);
-        }
+        saveToRedis(message);
 
         String destination = "/topic/project/" + message.getProjectId();
         messageSendingOperations.convertAndSend(destination,message);
