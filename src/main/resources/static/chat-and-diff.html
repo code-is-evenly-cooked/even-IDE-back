@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>채팅 + 코드 편집기</title>
+  <style>
+    body {
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+      font-family: sans-serif;
+    }
+    #chat, #editor {
+      width: 48%;
+    }
+    #chat ul {
+      border: 1px solid #ccc;
+      height: 200px;
+      padding: 10px;
+      overflow-y: scroll;
+      background: #f9f9f9;
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+    }
+  </style>
+</head>
+<body>
+<div id="chat">
+  <h3>채팅</h3>
+  <ul id="chatList"></ul>
+  <input id="chatInput" placeholder="메시지 입력" />
+  <button onclick="sendChat()">전송</button>
+</div>
+
+<div id="editor">
+  <h3>코드 편집기</h3>
+  <textarea id="codeArea" placeholder="코드 입력..."></textarea>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+<script>
+  const projectId = "123";
+  const fileId = 1;
+  let sender = null;
+  let nickname = null;
+  const token = localStorage.getItem("accessToken");
+
+  const socket = new SockJS("http://localhost:8080/ws");
+  const client = Stomp.over(socket);
+
+  let lastValue = "";
+
+  function connect() {
+    client.connect({}, () => {
+      client.subscribe("/topic/project/" + projectId, (msg) => {
+        const chat = JSON.parse(msg.body);
+        const li = document.createElement("li");
+        li.textContent = `[${chat.nickname}] ${chat.content}`;
+        document.getElementById("chatList").appendChild(li);
+      });
+
+    client.subscribe(`/topic/project/${projectId}/file${fileId}`, (msg) => {
+      const data = JSON.parse(msg.body);
+      const textarea = document.getElementById("codeArea");
+
+      // 기존 값에서 diff 적용
+      const current = textarea.value;
+      const newText = current.slice(0, data.from.column) + data.text + current.slice(data.to.column);
+
+      textarea.value = newText;
+      lastValue = newText; // 상태 동기화
+      console.log("📥 수신된 diff 메시지:", data);
+    });
+
+      client.send("/app/chat.join", {}, JSON.stringify({
+        type: "JOIN", projectId, sender, nickname
+      }));
+    });
+  }
+
+  function sendChat() {
+    const content = document.getElementById("chatInput").value;
+    if (!content.trim()) return;
+
+    client.send("/app/chat.send", {}, JSON.stringify({
+      type: "MESSAGE", projectId, sender, nickname, content
+    }));
+    document.getElementById("chatInput").value = "";
+  }
+
+  function sendDiffUpdate(newValue) {
+    const from = lastValue.length;
+    const to = newValue.length;
+    const diffText = newValue.slice(from, to);
+
+    const message = {
+      type: "CODE_DIFF",
+      projectId,
+      fileId,
+      sender,
+      nickname,
+      text: diffText,
+      from: { lineNumber: 0, column: from },
+      to: { lineNumber: 0, column: to },
+      timestamp: new Date().toISOString()
+    };
+
+    client.send("/app/code.diff", {}, JSON.stringify(message));
+    lastValue = newValue;
+  }
+
+  let timeout = null;
+  document.getElementById("codeArea").addEventListener("input", (e) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      sendDiffUpdate(e.target.value);
+    }, 500);
+  });
+
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  fetch("http://localhost:8080/chat/join", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ projectId })
+  })
+  .then(res => res.json())
+  .then(data => {
+    sender = data.sender;
+    nickname = data.nickname;
+    connect();
+  });
+</script>
+</body>
+</html>
