@@ -33,4 +33,15 @@ public class CodeEditorWebSocketController {
                 message
         );
     }
+
+    @MessageMapping("/code.diff")
+    public void handleCodeDiff(CodeDiffMessage message) {
+        log.info("diff 수신: {}", message);
+
+        codeSyncService.saveDiffToRedis(message);
+
+        String destination = "/topic/project/" + message.getProjectId() + "/file/" + message.getFileId();
+
+        messagingTemplate.convertAndSend(destination, message);
+    }
 }
