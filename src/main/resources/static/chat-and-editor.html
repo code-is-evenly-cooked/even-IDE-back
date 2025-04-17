@@ -63,7 +63,7 @@
       });
 
       // 코드 구독
-      client.subscribe(`/topic/project/${projectId}/file${fileId}`, (msg) => {
+      client.subscribe(`/topic/project/${projectId}/file/${fileId}`, (msg) => {
         const data = JSON.parse(msg.body);
         document.getElementById("codeArea").value = data.content;
       });

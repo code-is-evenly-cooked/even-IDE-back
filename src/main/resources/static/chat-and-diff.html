@@ -63,18 +63,21 @@
         document.getElementById("chatList").appendChild(li);
       });
 
-    client.subscribe(`/topic/project/${projectId}/file${fileId}`, (msg) => {
-      const data = JSON.parse(msg.body);
-      const textarea = document.getElementById("codeArea");
+      client.subscribe(`/topic/project/${projectId}/file/${fileId}`, (msg) => {
+        const data = JSON.parse(msg.body);
+        if (data.sender === sender) return;
+        const textarea = document.getElementById("codeArea");
 
-      // 기존 값에서 diff 적용
-      const current = textarea.value;
-      const newText = current.slice(0, data.from.column) + data.text + current.slice(data.to.column);
+        const before = lastValue;
+        const updated =
+          before.slice(0, data.from.column) +
+          data.text +
+          before.slice(data.to.column);
 
-      textarea.value = newText;
-      lastValue = newText; // 상태 동기화
-      console.log("📥 수신된 diff 메시지:", data);
-    });
+        textarea.value = updated;
+        lastValue = updated;
+        console.log("📥 수신된 diff 메시지:", data);
+      });
 
       client.send("/app/chat.join", {}, JSON.stringify({
         type: "JOIN", projectId, sender, nickname
@@ -93,24 +96,38 @@
   }
 
   function sendDiffUpdate(newValue) {
-    const from = lastValue.length;
-    const to = newValue.length;
-    const diffText = newValue.slice(from, to);
+    const prev = lastValue;
+    const curr = newValue;
 
+    let start = 0;
+    while (
+      start < prev.length &&
+      start < curr.length &&
+      prev[start] === curr[start]
+    ) start++;
+
+    let end = 0;
+    while (
+      end < prev.length - start &&
+      end < curr.length - start &&
+      prev[prev.length - 1 - end] === curr[curr.length - 1 - end]
+    ) end++;
+
+    const inserted = curr.slice(start, curr.length - end);
     const message = {
       type: "CODE_DIFF",
       projectId,
       fileId,
       sender,
       nickname,
-      text: diffText,
-      from: { lineNumber: 0, column: from },
-      to: { lineNumber: 0, column: to },
+      text: inserted,
+      from: { lineNumber: 0, column: start },
+      to: { lineNumber: 0, column: prev.length - end },
       timestamp: new Date().toISOString()
     };
 
     client.send("/app/code.diff", {}, JSON.stringify(message));
-    lastValue = newValue;
+    lastValue = curr;
   }
 
   let timeout = null;
