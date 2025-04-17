@@ -1,4 +1,4 @@
-package com.evenly.evenide.Config.Security;
+package com.evenly.evenide.config.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -33,6 +33,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/projects/*", "/projects/*/files/*").permitAll() // 프로젝트, 파일 단건 조회 인증 없이
                         .requestMatchers(HttpMethod.PATCH, "/projects/*/files/*/code").permitAll() // 코드 수정 인증 없이
                         .requestMatchers(HttpMethod.POST, "/code/execute").permitAll()// 코드 실행 인증 없이
+                        .requestMatchers(
+                                "/chat-test.html",
+                                "/ws/**",
+                                "/chat/join",
+                                "/chat/history",
+                                "/topic/**",
+                                "/app/**").permitAll() // 웹소켓
                         .anyRequest().authenticated() // 그외 모든 요청은 인증 필요
                 )
                 .addFilterBefore(new JwtFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
@@ -45,6 +52,7 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
         configuration.addAllowedOrigin("http://localhost:3000");
+        configuration.addAllowedOrigin("https://even-ide.vercel.app");
         configuration.addAllowedMethod("GET");
         configuration.addAllowedMethod("POST");
         configuration.addAllowedMethod("PUT");

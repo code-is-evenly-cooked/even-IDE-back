@@ -1,6 +1,6 @@
 package com.evenly.evenide.controller;
 
-import com.evenly.evenide.Config.Security.JwtUtil;
+import com.evenly.evenide.config.security.JwtUtil;
 import com.evenly.evenide.dto.JwtUserInfoDto;
 import com.evenly.evenide.dto.PasswordUpdateDto;
 import com.evenly.evenide.dto.UserResponseDto;
@@ -15,8 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
