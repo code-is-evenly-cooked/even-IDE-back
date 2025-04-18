@@ -36,7 +36,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/chat-test.html",
                                 "/chat-and-editor.html",
-                                "/chat-and-diff.html",
+                                "/chat-diff-and-cursor.html",
                                 "/ws/**",
                                 "/chat/join",
                                 "/chat/history",
