@@ -8,6 +8,7 @@ import com.evenly.evenide.global.exception.ErrorCode;
 import com.evenly.evenide.global.util.RandomNameGenerator;
 import com.evenly.evenide.repository.UserRepository;
 import com.evenly.evenide.service.ChatService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,11 +27,12 @@ public class ChatApiController {
 
     @PostMapping("/join")
     public ResponseEntity<ChatJoinResponse> join(
-            @RequestBody ChatEnterRequestDto requestDto,
+            @RequestBody @Valid ChatEnterRequestDto requestDto,
             @AuthenticationPrincipal JwtUserInfoDto userInfoDto
     ) {
         Long userId = (userInfoDto == null ? null : Long.valueOf(userInfoDto.getUserId()));
         Long projectId = requestDto.getProjectId();
+        Long fileId = requestDto.getFileId();
 
         String sender;
         String nickname;
@@ -51,9 +53,22 @@ public class ChatApiController {
                 projectId,
                 sender,
                 nickname,
-                "/topic/project/" + projectId,
-                "/app/chat.join",
-                "/app/chat.send"
+                new ChatJoinResponse.ChatPath(
+                        "/topic/project/" + projectId,
+                        "/app/chat.join",
+                        "/app/chat.send"
+                ),
+                new ChatJoinResponse.EditorPath(
+                        fileId,
+                        new ChatJoinResponse.EditorPath.DiffPath(
+                                "/topic/project/" + projectId + "/file/" + fileId,
+                                "/app/code.diff"
+                        ),
+                        new ChatJoinResponse.EditorPath.CursorPath(
+                                "/topic/project/" + projectId + "/file/" + fileId + "/cursor",
+                                "/app/code.cursor"
+                        )
+                )
         ));
     }
 
