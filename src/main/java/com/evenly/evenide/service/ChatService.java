@@ -109,6 +109,7 @@ public class ChatService {
                     try {
                         return objectMapper.readValue(json, ChatMessage.class);
                     } catch (JsonProcessingException e) {
+                        log.error("Redis 메시지 역직렬화 실패", e);
                         return null;
                     }
                 })
