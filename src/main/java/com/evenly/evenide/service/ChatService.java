@@ -11,6 +11,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -97,7 +98,10 @@ public class ChatService {
     public List<ChatMessage> searchMessages(String projectId, String keyword) {
         String redisKey = "chat:" + projectId;
 
-        Set<String> rawMessages = redisTemplate.opsForZSet().reverseRange(redisKey, 0, -1); //최신순
+        long now = System.currentTimeMillis();
+        long threeDaysAgo = now - Duration.ofDays(3).toMillis();
+
+        Set<String> rawMessages = redisTemplate.opsForZSet().reverseRange(redisKey, threeDaysAgo, now); //최신순
         if (rawMessages == null) return List.of();
 
         return rawMessages.stream()
