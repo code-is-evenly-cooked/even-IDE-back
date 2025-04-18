@@ -93,4 +93,24 @@ public class ChatService {
                 .filter(Objects::nonNull)
                 .toList();
     }
+
+    public List<ChatMessage> searchMessages(String projectId, String keyword) {
+        String redisKey = "chat:" + projectId;
+
+        Set<String> rawMessages = redisTemplate.opsForZSet().reverseRange(redisKey, 0, -1); //최신순
+        if (rawMessages == null) return List.of();
+
+        return rawMessages.stream()
+                .map(json -> {
+                    try {
+                        return objectMapper.readValue(json, ChatMessage.class);
+                    } catch (JsonProcessingException e) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .filter(message -> message.getType() == ChatMessage.MessageType.MESSAGE)
+                .filter(message -> message.getContent() != null && message.getContent().contains(keyword))
+                .toList();
+    }
 }
