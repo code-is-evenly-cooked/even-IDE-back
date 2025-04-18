@@ -37,8 +37,6 @@ public class CodeEditorWebSocketController {
 
     @MessageMapping("/code.diff")
     public void handleCodeDiff(CodeDiffMessage message) {
-        log.info("diff 수신: {}", message);
-
         codeSyncService.saveDiffToRedis(message);
 
         String destination = "/topic/project/" + message.getProjectId() + "/file/" + message.getFileId();
@@ -48,8 +46,6 @@ public class CodeEditorWebSocketController {
 
     @MessageMapping("/code.cursor")
     public void handleCursorMove(CodeCursorMessage message) {
-        log.info("커서 위치: {}", message);
-
         messagingTemplate.convertAndSend(
                 "/topic/project/" + message.getProjectId() + "/file/" + message.getFileId() + "/cursor",
                 message
