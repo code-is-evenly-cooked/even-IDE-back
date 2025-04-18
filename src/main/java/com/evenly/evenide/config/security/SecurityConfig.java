@@ -35,6 +35,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/code/execute").permitAll()// 코드 실행 인증 없이
                         .requestMatchers(
                                 "/chat-test.html",
+                                "/chat-and-editor.html",
+                                "/chat-diff-and-cursor.html",
                                 "/ws/**",
                                 "/chat/join",
                                 "/chat/history",
