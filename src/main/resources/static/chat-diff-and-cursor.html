@@ -161,6 +161,7 @@
   function sendCursorPosition() {
     const line = getCaretLineNumber();
     const cursorMessage = {
+      type: "CODE_CURSOR",
       projectId,
       fileId,
       sender,
