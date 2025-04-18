@@ -79,4 +79,13 @@ public class ChatApiController {
     ) {
         return ResponseEntity.ok(chatService.getRedisMessages(projectId, jwtUtil.resolveToken(token)));
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<ChatMessage>> searchMessage(
+            @RequestParam String projectId,
+            @RequestParam String keyword,
+            @AuthenticationPrincipal JwtUserInfoDto userInfo
+    ) {
+        return ResponseEntity.ok(chatService.searchMessages(projectId, keyword));
+    }
 }
