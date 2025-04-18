@@ -160,8 +160,8 @@ public class ChatService {
 
         if (centerIndex == -1) return List.of();
 
-        int from = Math.max(0, centerIndex - 3);
-        int to = Math.min(parsed.size(), centerIndex + 4);
+        int from = Math.max(0, centerIndex - 10);
+        int to = Math.min(parsed.size(), centerIndex + 11);
 
         return parsed.subList(from, to);
     }
