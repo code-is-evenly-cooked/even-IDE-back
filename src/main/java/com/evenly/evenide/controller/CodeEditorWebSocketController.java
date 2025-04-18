@@ -1,6 +1,7 @@
 package com.evenly.evenide.controller;
 
 
+import com.evenly.evenide.dto.CodeCursorMessage;
 import com.evenly.evenide.dto.CodeDiffMessage;
 import com.evenly.evenide.dto.CodeUpdateMessage;
 import com.evenly.evenide.service.CodeSyncService;
@@ -43,5 +44,15 @@ public class CodeEditorWebSocketController {
         String destination = "/topic/project/" + message.getProjectId() + "/file/" + message.getFileId();
 
         messagingTemplate.convertAndSend(destination, message);
+    }
+
+    @MessageMapping("/code.cursor")
+    public void handleCursorMove(CodeCursorMessage message) {
+        log.info("커서 위치: {}", message);
+
+        messagingTemplate.convertAndSend(
+                "/topic/project/" + message.getProjectId() + "/file/" + message.getFileId() + "/cursor",
+                message
+        );
     }
 }
