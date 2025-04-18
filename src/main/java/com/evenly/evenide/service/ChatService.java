@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 
@@ -15,10 +16,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.IntStream;
 
 @Slf4j
 @Service
@@ -117,5 +116,53 @@ public class ChatService {
                 .filter(message -> message.getType() == ChatMessage.MessageType.MESSAGE)
                 .filter(message -> message.getContent() != null && message.getContent().contains(keyword))
                 .toList();
+    }
+
+    public List<ChatMessage> getContext(String projectId, String timestampStr) {
+        String redisKey = "chat:" + projectId;
+
+        long center = LocalDateTime.parse(timestampStr)
+                .atZone(ZoneId.systemDefault())
+                .toInstant().toEpochMilli();
+
+        long now = System.currentTimeMillis();
+        long threeDaysAgo = now - Duration.ofDays(3).toMillis(); // 3일을 넘지 않음.
+        long margin = Duration.ofHours(24).toMillis(); // 검색한 메시지의 +-1일 메시지
+
+        Set<ZSetOperations.TypedTuple<String>> messagesWithScore =
+                redisTemplate.opsForZSet().rangeByScoreWithScores(
+                        redisKey,
+                        Math.max(threeDaysAgo, center - margin),
+                        center + margin
+                );
+        if (messagesWithScore == null) return List.of();
+
+        List<ChatMessage> parsed = messagesWithScore.stream()
+                .sorted(Comparator.comparingDouble(tuple ->
+                        tuple.getScore() != null ? tuple.getScore() : 0.0 // null 방지용 0.0
+                ))
+                .map(tuple -> {
+                    try {
+                        return objectMapper.readValue(tuple.getValue(), ChatMessage.class);
+                    } catch (JsonProcessingException e) {
+                        log.error("Redis 메시지 역직렬화 실패", e);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .filter(message -> message.getType() == ChatMessage.MessageType.MESSAGE)
+                .toList();
+
+        int centerIndex = IntStream.range(0, parsed.size())
+                .filter(i -> parsed.get(i).getTimestamp().equals(LocalDateTime.parse(timestampStr)))
+                .findFirst()
+                .orElse(-1);
+
+        if (centerIndex == -1) return List.of();
+
+        int from = Math.max(0, centerIndex - 3);
+        int to = Math.min(parsed.size(), centerIndex + 4);
+
+        return parsed.subList(from, to);
     }
 }
