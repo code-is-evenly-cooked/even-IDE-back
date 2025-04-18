@@ -101,7 +101,7 @@ public class ChatService {
         long now = System.currentTimeMillis();
         long threeDaysAgo = now - Duration.ofDays(3).toMillis();
 
-        Set<String> rawMessages = redisTemplate.opsForZSet().reverseRange(redisKey, threeDaysAgo, now); //최신순
+        Set<String> rawMessages = redisTemplate.opsForZSet().reverseRangeByScore(redisKey, threeDaysAgo, now); //최신순
         if (rawMessages == null) return List.of();
 
         return rawMessages.stream()
