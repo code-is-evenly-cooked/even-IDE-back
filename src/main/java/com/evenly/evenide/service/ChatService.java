@@ -2,6 +2,7 @@ package com.evenly.evenide.service;
 
 import com.evenly.evenide.config.security.JwtUtil;
 import com.evenly.evenide.dto.ChatMessage;
+import com.evenly.evenide.global.util.ChatMessageSanitizer;
 import com.evenly.evenide.global.util.RandomNameGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,8 +29,10 @@ public class ChatService {
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
     private final JwtUtil jwtUtil;
+    private final ChatMessageSanitizer chatMessageSanitizer;
 
-    public void sendMessage(ChatMessage message) {
+    public void sendMessage(ChatMessage originalMessage) {
+        ChatMessage message = chatMessageSanitizer.sanitize(originalMessage);
         saveToRedis(message);
 
         String destination = "/topic/project/" + message.getProjectId();
