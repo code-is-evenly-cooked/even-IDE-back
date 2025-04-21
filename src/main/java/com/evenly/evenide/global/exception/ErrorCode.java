@@ -21,9 +21,12 @@ public enum ErrorCode {
     CODE_EDIT_LOCKED(HttpStatus.FORBIDDEN,"코드 수정이 잠겨있습니다. 파일 주인만 수정이 가능합니다."),
 
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "로그인 인증이 필요합니다."),
-    SAME_PASSWORD(HttpStatus.BAD_REQUEST, "기존 비밀번호와 새 비밀번호가 동일합니다.");
+    SAME_PASSWORD(HttpStatus.BAD_REQUEST, "기존 비밀번호와 새 비밀번호가 동일합니다."),
 
-
+    USER_NOT_FOUND_WHERE(HttpStatus.NOT_FOUND,"사용자를 찾을 수 없습니다."),
+    MEMO_NOT_FOUND(HttpStatus.NOT_FOUND,"메모를 찾을 수 없습니다."),
+    MEMO_NO_PERMISSION_PATCH(HttpStatus.FORBIDDEN,"수정 권한이 없습니다."),
+    MEMO_NO_PERMISSION_DELETE(HttpStatus.FORBIDDEN,"삭제 권한이 없습니다.");
 
 
     private final HttpStatus httpStatus;
