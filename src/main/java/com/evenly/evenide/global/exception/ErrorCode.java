@@ -23,10 +23,11 @@ public enum ErrorCode {
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "로그인 인증이 필요합니다."),
     SAME_PASSWORD(HttpStatus.BAD_REQUEST, "기존 비밀번호와 새 비밀번호가 동일합니다."),
 
-    USER_NOT_FOUND_WHERE(HttpStatus.NOT_FOUND,"사용자를 찾을 수 없습니다."),
-    MEMO_NOT_FOUND(HttpStatus.NOT_FOUND,"메모를 찾을 수 없습니다."),
+    USER_NOT_FOUND_NEVER(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
+    MEMO_NOT_FOUND(HttpStatus.NOT_FOUND,"존재하지 않는 메모입니다."),
     MEMO_NO_PERMISSION_PATCH(HttpStatus.FORBIDDEN,"수정 권한이 없습니다."),
-    MEMO_NO_PERMISSION_DELETE(HttpStatus.FORBIDDEN,"삭제 권한이 없습니다.");
+    MEMO_NO_PERMISSION_DELETE(HttpStatus.FORBIDDEN,"삭제 권한이 없습니다."),
+    PROJECT_HAS_NO_FILES(HttpStatus.NOT_FOUND,"해당 프로젝트에 파일이 없습니다.");
 
 
     private final HttpStatus httpStatus;
