@@ -13,89 +13,122 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class MemoService {
 
-    private final MemoRepository memoRepository;
-    private final UserRepository userRepository;
-    private final MemoCacheService memoCacheService;
     private final CodeFileRepository codeFileRepository;
+    private final UserRepository userRepository;
+    private final MemoRepository memoRepository;
 
-    @Transactional
-    public Long createMemo(MemoCreateRequest request, Long userId, int lineNumber) {
 
-        CodeFile codeFile = codeFileRepository.findById(Long.valueOf(request.fileId()))
+    // 메모 생성
+    public MemoCreateResponse createMemo(MemoCreateRequest request, Long userId) {
+        CodeFile file = codeFileRepository.findById(request.getFileId())
                 .orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
-
-        String[] lines = codeFile.getContent().split("\n");
-        if (lineNumber < 1 || lineNumber > lines.length) {
-            throw new CustomException(ErrorCode.MEMO_NOT_FOUND);
-        }
-        String snapshot = lines[lineNumber - 1].trim();
-
-        memoCacheService.saveSnapShotLine(request.fileId(), snapshot, lineNumber);
-
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND_WHERE));
 
-        Memo memo = new Memo(request.content(), snapshot, request.fileId(), user);
-        memoRepository.save(memo);
-        return memo.getId();
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND_NEVER));
+
+        Memo memo = Memo.builder()
+                .fileId(request.getFileId())
+                .memo(request.getMemo())
+                .user(user)
+                .build();
+
+        Memo saved = memoRepository.save(memo);
+
+        return MemoCreateResponse.builder()
+                .memoId(saved.getMemoId())
+                .memo(saved.getMemo())
+                .writerId(saved.getUser().getId())
+                .writerNickName(saved.getUser().getNickname())
+                .build();
+
     }
 
 
-    // 메모 목록 조회
-    @Transactional(readOnly = true)
-    public MemoLookupResponse lookup(MemoLookupRequest request) {
-        CodeFile codeFile = codeFileRepository.findById(Long.valueOf(request.fileId()))
-                .orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
 
-        String[] lines = codeFile.getContent().split("\n");
-        String snapshot = request.codeSnapshot().trim();
-
-        int matchedLine = -1;
-        for (int i = 0; i < lines.length; i++) {
-            if (lines[i].trim().equals(snapshot)) {
-                matchedLine = i + 1;
-                break;
-            }
-        }
-
-        List<Memo> memos = memoRepository.findAllByFileIdAndCodeSnapshot(
-                request.fileId(), snapshot
-        );
-
-        List<MemoSimpleDto> memoDtos = memos.stream()
-                .map(m -> new MemoSimpleDto(m.getId(), m.getContent(), m.getCreatedAt()))
+    // 메모 전체 조회
+    public List<MemoResponse> getAllMemos(Long projectId) {
+        List<Long> fileIds = codeFileRepository.findAllByProjectId(projectId).stream()
+                .map(CodeFile::getId)
                 .toList();
 
-        return new MemoLookupResponse(matchedLine, memoDtos);
+        List<Memo> memos = memoRepository.findAllByFileIdInFetchUser(fileIds);
 
+        if (fileIds.isEmpty()) {
+            throw new CustomException(ErrorCode.PROJECT_HAS_NO_FILES);
+        }
+
+        return memos.stream().map(memo -> MemoResponse.builder()
+                        .memoId(memo.getMemoId())
+                        .fileId(memo.getFileId())
+                        .fileName(getFileNameById(memo.getFileId()))
+                        .memo(memo.getMemo())
+                        .writerId(memo.getUser().getId())
+                        .writerNickName(memo.getUser().getNickname())
+                        .build())
+                .toList();
     }
+
+    private String getFileNameById(Long  fileId) {
+        return codeFileRepository.findById(fileId)
+                .map(CodeFile::getName)
+                .orElse("알수없음");
+    }
+
+
+
+    // 메모 단건 조회
+    @Transactional
+    public MemoSimpleResponse getMemo(Long memoId) {
+        Memo memo = memoRepository.findWithUserByMemoId(memoId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MEMO_NOT_FOUND));
+        return MemoSimpleResponse.builder()
+                .memoId(memo.getMemoId())
+                .memo(memo.getMemo())
+                .writerId(memo.getUser().getId())
+                .writerNickName(memo.getUser().getNickname())
+                .build();
+    }
+
+
 
     // 메모 수정
     @Transactional
-    public void updateMemo(Long memoId, String userId,MemoUpdateRequest request) {
-        Memo memo = memoRepository.findById(memoId)
-                .orElseThrow(() -> new CustomException(ErrorCode.MEMO_NOT_FOUND));
+    public MemoSimpleResponse updateMemo(Long memoId, MemoUpdateRequest request, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND_NEVER));
 
-        if (!memo.getUser().getId().equals(Long.parseLong(userId))) {
-            throw new CustomException(ErrorCode.MEMO_NO_PERMISSION_PATCH);
-        }
-        memo.updateContent(request.content());
+        Memo memo = memoRepository.findByMemoIdAndUser(memoId,user)
+                .orElseThrow(() -> new CustomException(ErrorCode.MEMO_NO_PERMISSION_PATCH));
+
+        memo.update(request.getMemo());
+
+        return MemoSimpleResponse.builder()
+                .memoId(memo.getMemoId())
+                .memo(memo.getMemo())
+                .writerId(memo.getUser().getId())
+                .writerNickName(memo.getUser().getNickname())
+                .build();
     }
+
+
 
     // 메모 삭제
-    @Transactional
-    public void deleteMemo(Long memoId, String userId) {
-        Memo memo = memoRepository.findById(memoId)
-                .orElseThrow(() -> new CustomException(ErrorCode.MEMO_NOT_FOUND));
-        if (!memo.getUser().getId().equals(Long.parseLong(userId))) {
-            throw new CustomException(ErrorCode.MEMO_NO_PERMISSION_DELETE);
-        }
+    public void deleteMemo(Long memoId, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND_NEVER));
+        Memo memo = memoRepository.findByMemoIdAndUser(memoId,user)
+                .orElseThrow(() -> new CustomException(ErrorCode.MEMO_NO_PERMISSION_DELETE));
+
         memoRepository.delete(memo);
     }
+
+
+
 }
