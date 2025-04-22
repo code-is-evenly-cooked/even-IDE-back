@@ -1,6 +1,13 @@
 package com.evenly.evenide.dto;
 
-public record MemoCreateRequest (
-    String fileId,
-    String content
-){}
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+public class MemoCreateRequest {
+    private Long fileId;
+    private String memo;
+}

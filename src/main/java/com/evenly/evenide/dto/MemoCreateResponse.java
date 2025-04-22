@@ -1,6 +1,13 @@
 package com.evenly.evenide.dto;
 
-public record MemoCreateResponse (
-   Long memoId,
-   String status
-) {}
+import lombok.Builder;
+import lombok.Getter;
+
+@Getter
+@Builder
+public class MemoCreateResponse {
+    private Long memoId;
+    private String memo;
+    private Long writerId;
+    private String writerNickName;
+}
