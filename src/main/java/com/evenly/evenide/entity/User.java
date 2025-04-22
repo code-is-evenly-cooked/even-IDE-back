@@ -53,4 +53,14 @@ public class User {
     public void updatePassword(String encodedPassword) {
         this.password = encodedPassword;
     }
+
+    public static User createSocialUser(String email, String nickname, String provider, String providerId) {
+        User user = new User();
+        user.email = email;
+        user.password = null;
+        user.nickname = nickname;
+        user.provider = provider;
+        user.providerId = providerId;
+        return user;
+    }
 }
