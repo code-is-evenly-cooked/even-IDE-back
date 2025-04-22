@@ -203,7 +203,7 @@ public class AuthService {
         PasswordResetToken resetToken = PasswordResetToken.builder()
                 .user(user)
                 .token(token)
-                .expiration(LocalDateTime.now().plusMinutes(10))
+                .expiration(LocalDateTime.now().plusHours(2))
                 .build();
 
         passwordResetTokenRepository.save(resetToken);
