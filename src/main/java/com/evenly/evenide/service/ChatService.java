@@ -50,7 +50,15 @@ public class ChatService {
             message.setNickname(RandomNameGenerator.generateNickname());
         }
 
+        message.setType(ChatMessage.MessageType.JOIN);
         message.setContent(message.getNickname() + "님이 입장했습니다.");
+
+        if (message.getTimestamp() == null) {
+            message.setTimestamp(LocalDateTime.now());
+        }
+
+        saveToRedis(message);
+
         String destination = "/topic/project/" + message.getProjectId();
         messageSendingOperations.convertAndSend(destination, message);
     }
