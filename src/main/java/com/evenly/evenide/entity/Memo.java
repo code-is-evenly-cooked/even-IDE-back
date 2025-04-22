@@ -1,52 +1,36 @@
 package com.evenly.evenide.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
+@AllArgsConstructor
 public class Memo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long memoId;
 
-    private String content;
+    private Long fileId;
 
-    private String codeSnapshot;
-
-    private String fileId;
+    private String memo;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-
-    public Memo(String content, String codeSnapshot, String fileId, User user) {
-        this.content = content;
-        this.codeSnapshot = codeSnapshot;
-        this.fileId = fileId;
-        this.user = user;
-    }
-
 
     @PrePersist
-    protected void onCreate() {
+    public void prePersist() {
         this.createdAt = LocalDateTime.now();
     }
 
-    @PreUpdate
-    private void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    public void updateContent(String content) {
-        this.content = content;
+    public void update(String memo) {
+        this.memo = memo;
     }
 }
