@@ -78,6 +78,7 @@ public class AuthService {
 
         // 가입되지 않은 사용자 일때
         User user = userRepository.findByEmail(signInDto.getEmail())
+                .filter(u -> u.getProvider().equals("local"))
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         // 비밀번호 검증 부분
@@ -191,6 +192,7 @@ public class AuthService {
     @Transactional
     public void sendResetEmail(String email) {
         User user = userRepository.findByEmail(email)
+                .filter(u -> u.getProvider().equals("local"))
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         // 기존 토큰 삭제
