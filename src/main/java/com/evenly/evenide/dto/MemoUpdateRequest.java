@@ -8,6 +8,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MemoUpdateRequest {
-    private Long memoId;
     private String memo;
 }

@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.File;
 import java.util.List;
 
 @Service
@@ -26,15 +25,13 @@ public class MemoService {
 
 
     // 메모 생성
-    public MemoCreateResponse createMemo(MemoCreateRequest request, Long userId) {
-        CodeFile file = codeFileRepository.findById(request.getFileId())
-                .orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
+    public MemoCreateResponse createMemo(Long projectId,Long fileId, MemoCreateRequest request, Long userId) {
+        vaildateProjectAndFile(projectId, fileId);
         User user = userRepository.findById(userId)
-
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND_NEVER));
 
         Memo memo = Memo.builder()
-                .fileId(request.getFileId())
+                .fileId(fileId)
                 .memo(request.getMemo())
                 .user(user)
                 .build();
@@ -53,16 +50,17 @@ public class MemoService {
 
 
     // 메모 전체 조회
-    public List<MemoResponse> getAllMemos(Long projectId) {
-        List<Long> fileIds = codeFileRepository.findAllByProjectId(projectId).stream()
-                .map(CodeFile::getId)
-                .toList();
+    public List<MemoResponse> getAllMemos(Long projectId, Long fileId) {
+//        List<Long> fileIds = codeFileRepository.findAllByProjectId(projectId).stream()
+//                .map(CodeFile::getId)
+//                .toList();
+        vaildateProjectAndFile(projectId, fileId);
 
-        List<Memo> memos = memoRepository.findAllByFileIdInFetchUser(fileIds);
+        List<Memo> memos = memoRepository.findAllByFileIdInFetchUser(List.of(fileId));
 
-        if (fileIds.isEmpty()) {
-            throw new CustomException(ErrorCode.PROJECT_HAS_NO_FILES);
-        }
+//        if (fileIds.isEmpty()) {
+//            throw new CustomException(ErrorCode.PROJECT_HAS_NO_FILES);
+//        }
 
         return memos.stream().map(memo -> MemoResponse.builder()
                         .memoId(memo.getMemoId())
@@ -85,7 +83,9 @@ public class MemoService {
 
     // 메모 단건 조회
     @Transactional
-    public MemoSimpleResponse getMemo(Long memoId) {
+    public MemoSimpleResponse getMemo(Long projectId, Long fileId,Long memoId) {
+        vaildateProjectAndFile(projectId, fileId);
+
         Memo memo = memoRepository.findWithUserByMemoId(memoId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MEMO_NOT_FOUND));
         return MemoSimpleResponse.builder()
@@ -100,7 +100,9 @@ public class MemoService {
 
     // 메모 수정
     @Transactional
-    public MemoSimpleResponse updateMemo(Long memoId, MemoUpdateRequest request, Long userId) {
+    public MemoSimpleResponse updateMemo(Long projectId, Long fileId, Long memoId, MemoUpdateRequest request, Long userId) {
+        vaildateProjectAndFile(projectId, fileId);
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND_NEVER));
 
@@ -120,7 +122,8 @@ public class MemoService {
 
 
     // 메모 삭제
-    public void deleteMemo(Long memoId, Long userId) {
+    public void deleteMemo(Long projectId, Long fileId, Long memoId, Long userId) {
+        vaildateProjectAndFile(projectId, fileId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND_NEVER));
         Memo memo = memoRepository.findByMemoIdAndUser(memoId,user)
@@ -128,6 +131,23 @@ public class MemoService {
 
         memoRepository.delete(memo);
     }
+
+    // 프로젝트, 파일 유효성 검사
+    private void vaildateProjectAndFile(Long projectId, Long fileId) {
+       if (!codeFileRepository.existsByProjectId(projectId)){
+           throw new CustomException(ErrorCode.PROJECT_NOT_FOUND);
+       }
+       if (!codeFileRepository.existsById(fileId)){
+           throw new CustomException(ErrorCode.FILE_NOT_FOUND);
+       }
+
+       codeFileRepository.findById(fileId).ifPresent(codeFile -> {
+           if (!codeFile.getProject().getId().equals(projectId)) {
+               throw new CustomException(ErrorCode.PROJECT_HAS_NO_FILES);
+           }
+       });
+    }
+
 
 
 

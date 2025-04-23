@@ -13,16 +13,21 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/memo")
+@RequestMapping("/projects/{projectId}/file/{fileId}")
 public class MemoController {
 
     private final MemoService memoService;
 
     // 메모 생성
-    @PostMapping
-    public ResponseEntity<MemoCreateResponse> createMemo(@RequestBody @Valid MemoCreateRequest request,
-                                                         @AuthenticationPrincipal JwtUserInfoDto userInfo) {
+    @PostMapping("/memos")
+    public ResponseEntity<MemoCreateResponse> createMemo(
+            @PathVariable Long projectId,
+            @PathVariable Long fileId,
+            @RequestBody @Valid MemoCreateRequest request,
+            @AuthenticationPrincipal JwtUserInfoDto userInfo) {
         MemoCreateResponse response = memoService.createMemo(
+                projectId,
+                fileId,
                 request,
                 Long.parseLong(userInfo.getUserId())
         );
@@ -31,36 +36,52 @@ public class MemoController {
 
 
     // 메모 전체 조회
-    @GetMapping
-    public ResponseEntity<List<MemoResponse>> getMemos(@RequestParam Long projectId) {
-        List<MemoResponse> responses = memoService.getAllMemos(projectId);
+    @GetMapping("/memos")
+    public ResponseEntity<List<MemoResponse>> getMemos(@PathVariable Long projectId,
+                                                       @PathVariable Long fileId) {
+        List<MemoResponse> responses = memoService.getAllMemos(projectId, fileId);
         return ResponseEntity.ok(responses);
     }
 
 
     // 메모 단일 조회
-    @GetMapping("/{memoId}")
-    public ResponseEntity<MemoSimpleResponse> getMemo(@PathVariable Long memoId) {
-        MemoSimpleResponse response = memoService.getMemo(memoId);
+    @GetMapping("/memos/{memoId}")
+    public ResponseEntity<MemoSimpleResponse> getMemo(@PathVariable Long projectId,
+                                                      @PathVariable Long fileId,
+                                                      @PathVariable Long memoId) {
+        MemoSimpleResponse response = memoService.getMemo(projectId, fileId,memoId);
         return ResponseEntity.ok(response);
     }
 
 
     // 메모 수정
-    @PatchMapping
-    public ResponseEntity<MemoSimpleResponse> updateMemo(@RequestBody MemoUpdateRequest request,
-                                                   @AuthenticationPrincipal JwtUserInfoDto userInfo) {
+    @PatchMapping("/memos/{memoId}")
+    public ResponseEntity<MemoSimpleResponse> updateMemo(
+            @PathVariable Long projectId,
+            @PathVariable Long fileId,
+            @PathVariable Long memoId,
+            @RequestBody MemoUpdateRequest request,
+            @AuthenticationPrincipal JwtUserInfoDto userInfo) {
         MemoSimpleResponse response = memoService.updateMemo(
-                request.getMemoId(),
+                projectId,
+                fileId,
+                memoId,
                 request,
                 Long.parseLong(userInfo.getUserId()));
         return ResponseEntity.ok(response);
     }
 
     // 메모 삭제
-    @DeleteMapping("/{memoId}")
-    public ResponseEntity<MessageResponse> deleteMemo(@PathVariable Long memoId, @AuthenticationPrincipal JwtUserInfoDto userInfo) {
-        memoService.deleteMemo(memoId, Long.parseLong(userInfo.getUserId()));
+    @DeleteMapping("/memos/{memoId}")
+    public ResponseEntity<MessageResponse> deleteMemo(@PathVariable Long projectId,
+                                                      @PathVariable Long fileId,
+                                                      @PathVariable Long memoId,
+                                                      @AuthenticationPrincipal JwtUserInfoDto userInfo) {
+        memoService.deleteMemo(
+                projectId,
+                fileId,
+                memoId,
+                Long.parseLong(userInfo.getUserId()));
         return ResponseEntity.ok(new MessageResponse("success"));
     }
 
