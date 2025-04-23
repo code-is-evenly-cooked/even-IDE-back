@@ -1,5 +1,7 @@
 package com.evenly.evenide.global.util;
 
+import com.evenly.evenide.global.exception.CustomException;
+import com.evenly.evenide.global.exception.ErrorCode;
 import org.springframework.stereotype.Component;
 
 import java.util.Random;
@@ -27,7 +29,7 @@ public class SocialNameGenerator {
             nickname = generate(provider);
             tryCount++;
             if (tryCount > 5) {
-                throw new RuntimeException("닉네임 생성 실패");
+                throw new CustomException(ErrorCode.NICKNAME_GENERATION_FAILED);
             }
         } while (isDuplicate.apply(nickname));
 
