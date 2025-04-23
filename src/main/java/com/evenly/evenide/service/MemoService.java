@@ -26,7 +26,7 @@ public class MemoService {
 
     // 메모 생성
     public MemoCreateResponse createMemo(Long projectId,Long fileId, MemoCreateRequest request, Long userId) {
-        vaildateProjectAndFile(projectId, fileId);
+        validateProjectAndFile(projectId, fileId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND_NEVER));
 
@@ -44,23 +44,14 @@ public class MemoService {
                 .writerId(saved.getUser().getId())
                 .writerNickName(saved.getUser().getNickname())
                 .build();
-
     }
-
 
 
     // 메모 전체 조회
     public List<MemoResponse> getAllMemos(Long projectId, Long fileId) {
-//        List<Long> fileIds = codeFileRepository.findAllByProjectId(projectId).stream()
-//                .map(CodeFile::getId)
-//                .toList();
-        vaildateProjectAndFile(projectId, fileId);
+        validateProjectAndFile(projectId, fileId);
 
         List<Memo> memos = memoRepository.findAllByFileIdInFetchUser(List.of(fileId));
-
-//        if (fileIds.isEmpty()) {
-//            throw new CustomException(ErrorCode.PROJECT_HAS_NO_FILES);
-//        }
 
         return memos.stream().map(memo -> MemoResponse.builder()
                         .memoId(memo.getMemoId())
@@ -80,11 +71,10 @@ public class MemoService {
     }
 
 
-
     // 메모 단건 조회
     @Transactional
     public MemoSimpleResponse getMemo(Long projectId, Long fileId,Long memoId) {
-        vaildateProjectAndFile(projectId, fileId);
+        validateProjectAndFile(projectId, fileId);
 
         Memo memo = memoRepository.findWithUserByMemoId(memoId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MEMO_NOT_FOUND));
@@ -97,11 +87,10 @@ public class MemoService {
     }
 
 
-
     // 메모 수정
     @Transactional
     public MemoSimpleResponse updateMemo(Long projectId, Long fileId, Long memoId, MemoUpdateRequest request, Long userId) {
-        vaildateProjectAndFile(projectId, fileId);
+        validateProjectAndFile(projectId, fileId);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND_NEVER));
@@ -120,10 +109,9 @@ public class MemoService {
     }
 
 
-
     // 메모 삭제
     public void deleteMemo(Long projectId, Long fileId, Long memoId, Long userId) {
-        vaildateProjectAndFile(projectId, fileId);
+        validateProjectAndFile(projectId, fileId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND_NEVER));
         Memo memo = memoRepository.findByMemoIdAndUser(memoId,user)
@@ -132,8 +120,9 @@ public class MemoService {
         memoRepository.delete(memo);
     }
 
+
     // 프로젝트, 파일 유효성 검사
-    private void vaildateProjectAndFile(Long projectId, Long fileId) {
+    private void validateProjectAndFile(Long projectId, Long fileId) {
        if (!codeFileRepository.existsByProjectId(projectId)){
            throw new CustomException(ErrorCode.PROJECT_NOT_FOUND);
        }
