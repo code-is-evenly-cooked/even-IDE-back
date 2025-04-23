@@ -10,9 +10,10 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:3000")
-                .allowedOrigins("https://even-ide.vercel.app")
-                .allowedOrigins("https://together-cute-fly.ngrok-free.app")
+                .allowedOrigins(
+                        "http://localhost:3000",
+                        "https://even-ide.vercel.app",
+                        "https://together-cute-fly.ngrok-free.app")
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
