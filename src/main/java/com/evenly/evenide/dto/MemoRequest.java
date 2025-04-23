@@ -7,6 +7,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class MemoCreateRequest {
+public class MemoRequest {
     private String memo;
 }
