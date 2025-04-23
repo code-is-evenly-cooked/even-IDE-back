@@ -2,6 +2,7 @@ package com.evenly.evenide.service;
 
 import com.evenly.evenide.config.security.JwtUtil;
 import com.evenly.evenide.dto.ChatMessage;
+import com.evenly.evenide.global.util.ChatMessageSanitizer;
 import com.evenly.evenide.global.util.RandomNameGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,8 +29,15 @@ public class ChatService {
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
     private final JwtUtil jwtUtil;
+    private final ChatMessageSanitizer chatMessageSanitizer;
 
-    public void sendMessage(ChatMessage message) {
+    //클래스 변수
+    private static final long ONE_SECOND = 1000L;
+    private static final long ONE_MINUTE = ONE_SECOND * 60;
+    private static final long ONE_HOUR = ONE_MINUTE * 60;
+
+    public void sendMessage(ChatMessage originalMessage) {
+        ChatMessage message = chatMessageSanitizer.sanitize(originalMessage);
         saveToRedis(message);
 
         String destination = "/topic/project/" + message.getProjectId();
@@ -42,7 +50,15 @@ public class ChatService {
             message.setNickname(RandomNameGenerator.generateNickname());
         }
 
+        message.setType(ChatMessage.MessageType.JOIN);
         message.setContent(message.getNickname() + "님이 입장했습니다.");
+
+        if (message.getTimestamp() == null) {
+            message.setTimestamp(LocalDateTime.now());
+        }
+
+        saveToRedis(message);
+
         String destination = "/topic/project/" + message.getProjectId();
         messageSendingOperations.convertAndSend(destination, message);
     }
@@ -76,8 +92,8 @@ public class ChatService {
         long now = Instant.now().toEpochMilli();
 
         long threshold = isAnon
-                ? now - 1000L * 60 * 60 * 24
-                : now - 1000L * 60 * 60 * 24 * 3;
+                ? now - ONE_HOUR * 24
+                : now - ONE_HOUR * 24 * 3;
         Set<String> jsonSet = redisTemplate.opsForZSet().rangeByScore(key, threshold, now);
         List<String> jsonList = new ArrayList<>(jsonSet);
 
@@ -127,17 +143,18 @@ public class ChatService {
 
         long now = System.currentTimeMillis();
         long threeDaysAgo = now - Duration.ofDays(3).toMillis(); // 3일을 넘지 않음.
-        long margin = Duration.ofHours(24).toMillis(); // 검색한 메시지의 +-1일 메시지
+        long oneDayMargin = Duration.ofHours(24).toMillis(); // 검색한 메시지의 +-1일 메시지
+        long fromTimestamp = Math.max(threeDaysAgo, center - oneDayMargin);
 
         Set<ZSetOperations.TypedTuple<String>> messagesWithScore =
                 redisTemplate.opsForZSet().rangeByScoreWithScores(
                         redisKey,
-                        Math.max(threeDaysAgo, center - margin),
-                        center + margin
+                        fromTimestamp,
+                        center + oneDayMargin
                 );
         if (messagesWithScore == null) return List.of();
 
-        List<ChatMessage> parsed = messagesWithScore.stream()
+        List<ChatMessage> parsedMessage = messagesWithScore.stream()
                 .sorted(Comparator.comparingDouble(tuple ->
                         tuple.getScore() != null ? tuple.getScore() : 0.0 // null 방지용 0.0
                 ))
@@ -153,16 +170,20 @@ public class ChatService {
                 .filter(message -> message.getType() == ChatMessage.MessageType.MESSAGE)
                 .toList();
 
-        int centerIndex = IntStream.range(0, parsed.size())
-                .filter(i -> parsed.get(i).getTimestamp().equals(LocalDateTime.parse(timestampStr)))
+        int centerIndex = IntStream.range(0, parsedMessage.size())
+                .filter(i -> parsedMessage.get(i).getTimestamp().equals(LocalDateTime.parse(timestampStr)))
                 .findFirst()
                 .orElse(-1);
 
-        if (centerIndex == -1) return List.of();
+        if (isEmptyMessage(centerIndex)) return List.of();
 
         int from = Math.max(0, centerIndex - 10);
-        int to = Math.min(parsed.size(), centerIndex + 11);
+        int to = Math.min(parsedMessage.size(), centerIndex + 11);
 
-        return parsed.subList(from, to);
+        return parsedMessage.subList(from, to);
+    }
+
+    private boolean isEmptyMessage(int centerIndex) {
+        return centerIndex == -1;
     }
 }

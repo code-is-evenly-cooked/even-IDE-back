@@ -20,7 +20,7 @@ public class EmailService {
                 
                 아래 링크를 클릭하시면 비밀번호를 재설정 하실 수 있습니다.
                 %s
-                해당 링크는 10분 동안만 유효합니다.
+                해당 링크는 2시간 동안만 유효합니다.
                 감사합니다!
                 """.formatted(resetUrl));
         mailSender.send(message);

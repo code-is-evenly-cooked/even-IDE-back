@@ -22,10 +22,10 @@ public class User {
     private Long id;
 
     @Email
-    @Column(nullable = false, unique = true)
+    @Column(nullable = true, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String password;
 
     @Column(nullable = false, unique = true)
@@ -52,5 +52,15 @@ public class User {
 
     public void updatePassword(String encodedPassword) {
         this.password = encodedPassword;
+    }
+
+    public static User createSocialUser(String email, String nickname, String provider, String providerId) {
+        User user = new User();
+        user.email = email;
+        user.password = null;
+        user.nickname = nickname;
+        user.provider = provider;
+        user.providerId = providerId;
+        return user;
     }
 }
