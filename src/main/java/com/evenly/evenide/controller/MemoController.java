@@ -20,12 +20,12 @@ public class MemoController {
 
     // 메모 생성
     @PostMapping("/memos")
-    public ResponseEntity<MemoCreateResponse> createMemo(
+    public ResponseEntity<MemoResponse> createMemo(
             @PathVariable Long projectId,
             @PathVariable Long fileId,
-            @RequestBody @Valid MemoCreateRequest request,
+            @RequestBody @Valid MemoRequest request,
             @AuthenticationPrincipal JwtUserInfoDto userInfo) {
-        MemoCreateResponse response = memoService.createMemo(
+        MemoResponse response = memoService.createMemo(
                 projectId,
                 fileId,
                 request,
@@ -46,23 +46,23 @@ public class MemoController {
 
     // 메모 단일 조회
     @GetMapping("/memos/{memoId}")
-    public ResponseEntity<MemoSimpleResponse> getMemo(@PathVariable Long projectId,
+    public ResponseEntity<MemoResponse> getMemo(@PathVariable Long projectId,
                                                       @PathVariable Long fileId,
                                                       @PathVariable Long memoId) {
-        MemoSimpleResponse response = memoService.getMemo(projectId, fileId,memoId);
+        MemoResponse response = memoService.getMemo(projectId, fileId,memoId);
         return ResponseEntity.ok(response);
     }
 
 
     // 메모 수정
     @PatchMapping("/memos/{memoId}")
-    public ResponseEntity<MemoSimpleResponse> updateMemo(
+    public ResponseEntity<MemoResponse> updateMemo(
             @PathVariable Long projectId,
             @PathVariable Long fileId,
             @PathVariable Long memoId,
-            @RequestBody MemoUpdateRequest request,
+            @RequestBody MemoRequest request,
             @AuthenticationPrincipal JwtUserInfoDto userInfo) {
-        MemoSimpleResponse response = memoService.updateMemo(
+        MemoResponse response = memoService.updateMemo(
                 projectId,
                 fileId,
                 memoId,

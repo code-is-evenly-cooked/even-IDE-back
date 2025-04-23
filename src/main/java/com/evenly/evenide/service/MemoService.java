@@ -25,10 +25,10 @@ public class MemoService {
 
 
     // 메모 생성
-    public MemoCreateResponse createMemo(Long projectId,Long fileId, MemoCreateRequest request, Long userId) {
+    public MemoResponse createMemo(Long projectId, Long fileId, MemoRequest request, Long userId) {
         validateProjectAndFile(projectId, fileId);
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND_NEVER));
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         Memo memo = Memo.builder()
                 .fileId(fileId)
@@ -38,7 +38,7 @@ public class MemoService {
 
         Memo saved = memoRepository.save(memo);
 
-        return MemoCreateResponse.builder()
+        return MemoResponse.builder()
                 .memoId(saved.getMemoId())
                 .memo(saved.getMemo())
                 .writerId(saved.getUser().getId())
@@ -55,8 +55,6 @@ public class MemoService {
 
         return memos.stream().map(memo -> MemoResponse.builder()
                         .memoId(memo.getMemoId())
-                        .fileId(memo.getFileId())
-                        .fileName(getFileNameById(memo.getFileId()))
                         .memo(memo.getMemo())
                         .writerId(memo.getUser().getId())
                         .writerNickName(memo.getUser().getNickname())
@@ -73,12 +71,12 @@ public class MemoService {
 
     // 메모 단건 조회
     @Transactional
-    public MemoSimpleResponse getMemo(Long projectId, Long fileId,Long memoId) {
+    public MemoResponse getMemo(Long projectId, Long fileId,Long memoId) {
         validateProjectAndFile(projectId, fileId);
 
         Memo memo = memoRepository.findWithUserByMemoId(memoId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MEMO_NOT_FOUND));
-        return MemoSimpleResponse.builder()
+        return MemoResponse.builder()
                 .memoId(memo.getMemoId())
                 .memo(memo.getMemo())
                 .writerId(memo.getUser().getId())
@@ -89,18 +87,18 @@ public class MemoService {
 
     // 메모 수정
     @Transactional
-    public MemoSimpleResponse updateMemo(Long projectId, Long fileId, Long memoId, MemoUpdateRequest request, Long userId) {
+    public MemoResponse updateMemo(Long projectId, Long fileId, Long memoId, MemoRequest request, Long userId) {
         validateProjectAndFile(projectId, fileId);
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND_NEVER));
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         Memo memo = memoRepository.findByMemoIdAndUser(memoId,user)
                 .orElseThrow(() -> new CustomException(ErrorCode.MEMO_NO_PERMISSION_PATCH));
 
         memo.update(request.getMemo());
 
-        return MemoSimpleResponse.builder()
+        return MemoResponse.builder()
                 .memoId(memo.getMemoId())
                 .memo(memo.getMemo())
                 .writerId(memo.getUser().getId())
@@ -113,7 +111,7 @@ public class MemoService {
     public void deleteMemo(Long projectId, Long fileId, Long memoId, Long userId) {
         validateProjectAndFile(projectId, fileId);
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND_NEVER));
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         Memo memo = memoRepository.findByMemoIdAndUser(memoId,user)
                 .orElseThrow(() -> new CustomException(ErrorCode.MEMO_NO_PERMISSION_DELETE));
 
@@ -132,7 +130,7 @@ public class MemoService {
 
        codeFileRepository.findById(fileId).ifPresent(codeFile -> {
            if (!codeFile.getProject().getId().equals(projectId)) {
-               throw new CustomException(ErrorCode.PROJECT_HAS_NO_FILES);
+               throw new CustomException(ErrorCode.INVALID_PROJECT_ACCESS);
            }
        });
     }
