@@ -21,7 +21,11 @@ public enum ErrorCode {
     CODE_EDIT_LOCKED(HttpStatus.FORBIDDEN,"코드 수정이 잠겨있습니다. 파일 주인만 수정이 가능합니다."),
 
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "로그인 인증이 필요합니다."),
-    SAME_PASSWORD(HttpStatus.BAD_REQUEST, "기존 비밀번호와 새 비밀번호가 동일합니다.");
+    SAME_PASSWORD(HttpStatus.BAD_REQUEST, "기존 비밀번호와 새 비밀번호가 동일합니다."),
+
+    NICKNAME_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR,"닉네임 생성에 실패했습니다."),
+    INVALID_OAUTH_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 소셜 인증 토큰입니다."),
+    UNSUPPORTED_PROVIDER(HttpStatus.UNAUTHORIZED, "지원하지 않는 소셜 로그인 방식입니다.");
 
 
 
