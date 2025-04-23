@@ -25,7 +25,7 @@ public enum ErrorCode {
 
     NICKNAME_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR,"닉네임 생성에 실패했습니다."),
     INVALID_OAUTH_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 소셜 인증 토큰입니다."),
-    UNSUPPORTED_PROVIDER(HttpStatus.UNAUTHORIZED, "지원하지 않는 소셜 로그인 방식입니다.");
+    UNSUPPORTED_PROVIDER(HttpStatus.UNAUTHORIZED, "지원하지 않는 소셜 로그인 방식입니다."),
 
     MEMO_NOT_FOUND(HttpStatus.NOT_FOUND,"존재하지 않는 메모입니다."),
     MEMO_NO_PERMISSION_PATCH(HttpStatus.FORBIDDEN,"수정 권한이 없습니다."),
