@@ -22,7 +22,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .setAllowedOriginPatterns(
                         "http://localhost:3000",
                         "https://even-ide.vercel.app",
-                        "http://localhost:8080")
+                        "http://localhost:8080",
+                        "https://together-cute-fly.ngrok-free.app")
                 .withSockJS();
     }
 }

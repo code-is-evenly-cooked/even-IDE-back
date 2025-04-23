@@ -55,6 +55,7 @@ public class SecurityConfig {
 
         configuration.addAllowedOrigin("http://localhost:3000");
         configuration.addAllowedOrigin("https://even-ide.vercel.app");
+        configuration.addAllowedOrigin("https://together-cute-fly.ngrok-free.app");
         configuration.addAllowedMethod("GET");
         configuration.addAllowedMethod("POST");
         configuration.addAllowedMethod("PUT");
