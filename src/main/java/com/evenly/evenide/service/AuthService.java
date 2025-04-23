@@ -208,7 +208,7 @@ public class AuthService {
 
         passwordResetTokenRepository.save(resetToken);
 
-        String resetUrl = resetBaseUrl + "/reset-password?token=" + token;
+        String resetUrl = resetBaseUrl + "/password-reset?token=" + token;
         emailService.sendResetPasswordEmail(user.getEmail(), resetUrl);
 
     }
