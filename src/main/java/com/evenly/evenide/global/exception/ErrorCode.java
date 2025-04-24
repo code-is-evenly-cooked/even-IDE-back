@@ -29,7 +29,8 @@ public enum ErrorCode {
 
     MEMO_NOT_FOUND(HttpStatus.NOT_FOUND,"존재하지 않는 메모입니다."),
     MEMO_NO_PERMISSION_PATCH(HttpStatus.FORBIDDEN,"수정 권한이 없습니다."),
-    MEMO_NO_PERMISSION_DELETE(HttpStatus.FORBIDDEN,"삭제 권한이 없습니다.");
+    MEMO_NO_PERMISSION_DELETE(HttpStatus.FORBIDDEN,"삭제 권한이 없습니다."),
+    INVALID_MEMO_ACCESS(HttpStatus.FORBIDDEN,"해당 파일에 속하지 않은 메모입니다.");
 
 
     private final HttpStatus httpStatus;

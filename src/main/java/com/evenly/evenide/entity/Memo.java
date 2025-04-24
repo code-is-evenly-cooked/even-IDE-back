@@ -16,14 +16,16 @@ public class Memo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long memoId;
 
-    private Long fileId;
-
     private String memo;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
     private LocalDateTime createdAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "file_id")
+    private CodeFile codeFile;
 
     @PrePersist
     public void prePersist() {
