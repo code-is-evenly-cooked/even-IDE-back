@@ -27,23 +27,19 @@ public class MemoService {
     // 메모 생성
     public MemoResponse createMemo(Long projectId, Long fileId, MemoRequest request, Long userId) {
         validateProjectAndFile(projectId, fileId);
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        User user = getUser(userId);
+        CodeFile codeFile = getCodeFile(fileId);
 
         Memo memo = Memo.builder()
-                .fileId(fileId)
                 .memo(request.getMemo())
                 .user(user)
+                .codeFile(codeFile)
                 .build();
 
         Memo saved = memoRepository.save(memo);
 
-        return MemoResponse.builder()
-                .memoId(saved.getMemoId())
-                .memo(saved.getMemo())
-                .writerId(saved.getUser().getId())
-                .writerNickName(saved.getUser().getNickname())
-                .build();
+        return toResponse(saved);
+
     }
 
 
@@ -51,22 +47,12 @@ public class MemoService {
     public List<MemoResponse> getAllMemos(Long projectId, Long fileId) {
         validateProjectAndFile(projectId, fileId);
 
-        List<Memo> memos = memoRepository.findAllByFileIdInFetchUser(List.of(fileId));
+        List<Memo> memos = memoRepository.findAllByCodeFile_IdIn(List.of(fileId));
 
-        return memos.stream().map(memo -> MemoResponse.builder()
-                        .memoId(memo.getMemoId())
-                        .memo(memo.getMemo())
-                        .writerId(memo.getUser().getId())
-                        .writerNickName(memo.getUser().getNickname())
-                        .build())
+        return memos.stream().map(this::toResponse)
                 .toList();
     }
 
-    private String getFileNameById(Long  fileId) {
-        return codeFileRepository.findById(fileId)
-                .map(CodeFile::getName)
-                .orElse("알수없음");
-    }
 
 
     // 메모 단건 조회
@@ -74,14 +60,14 @@ public class MemoService {
     public MemoResponse getMemo(Long projectId, Long fileId,Long memoId) {
         validateProjectAndFile(projectId, fileId);
 
-        Memo memo = memoRepository.findWithUserByMemoId(memoId)
+        Memo memo = memoRepository.findByMemoId(memoId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MEMO_NOT_FOUND));
-        return MemoResponse.builder()
-                .memoId(memo.getMemoId())
-                .memo(memo.getMemo())
-                .writerId(memo.getUser().getId())
-                .writerNickName(memo.getUser().getNickname())
-                .build();
+
+        if (!memo.getCodeFile().getId().equals(fileId)) {
+            throw new CustomException(ErrorCode.INVALID_MEMO_ACCESS);
+        }
+
+        return toResponse(memo);
     }
 
 
@@ -89,31 +75,31 @@ public class MemoService {
     @Transactional
     public MemoResponse updateMemo(Long projectId, Long fileId, Long memoId, MemoRequest request, Long userId) {
         validateProjectAndFile(projectId, fileId);
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        User user = getUser(userId);
 
         Memo memo = memoRepository.findByMemoIdAndUser(memoId,user)
                 .orElseThrow(() -> new CustomException(ErrorCode.MEMO_NO_PERMISSION_PATCH));
 
+        if (!memo.getCodeFile().getId().equals(fileId)) {
+            throw new CustomException(ErrorCode.INVALID_MEMO_ACCESS);
+        }
+
         memo.update(request.getMemo());
 
-        return MemoResponse.builder()
-                .memoId(memo.getMemoId())
-                .memo(memo.getMemo())
-                .writerId(memo.getUser().getId())
-                .writerNickName(memo.getUser().getNickname())
-                .build();
+        return toResponse(memo);
     }
 
 
     // 메모 삭제
     public void deleteMemo(Long projectId, Long fileId, Long memoId, Long userId) {
         validateProjectAndFile(projectId, fileId);
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        User user = getUser(userId);
         Memo memo = memoRepository.findByMemoIdAndUser(memoId,user)
                 .orElseThrow(() -> new CustomException(ErrorCode.MEMO_NO_PERMISSION_DELETE));
+
+        if (!memo.getCodeFile().getId().equals(fileId)) {
+            throw new CustomException(ErrorCode.INVALID_MEMO_ACCESS);
+        }
 
         memoRepository.delete(memo);
     }
@@ -124,18 +110,32 @@ public class MemoService {
        if (!codeFileRepository.existsByProjectId(projectId)){
            throw new CustomException(ErrorCode.PROJECT_NOT_FOUND);
        }
-       if (!codeFileRepository.existsById(fileId)){
-           throw new CustomException(ErrorCode.FILE_NOT_FOUND);
+
+       CodeFile codeFile = codeFileRepository.findById(fileId)
+               .orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
+
+
+       if (!codeFile.getProject().getId().equals(projectId)) {
+           throw new CustomException(ErrorCode.INVALID_PROJECT_ACCESS);
+        }
        }
 
-       codeFileRepository.findById(fileId).ifPresent(codeFile -> {
-           if (!codeFile.getProject().getId().equals(projectId)) {
-               throw new CustomException(ErrorCode.INVALID_PROJECT_ACCESS);
-           }
-       });
+        private User getUser(Long userId) {
+            return userRepository.findById(userId)
+                    .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        }
+
+        private CodeFile getCodeFile(Long fileId) {
+            return codeFileRepository.findById(fileId)
+                    .orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
+        }
+
+        private MemoResponse toResponse(Memo memo) {
+            return MemoResponse.builder()
+                    .memoId(memo.getMemoId())
+                    .memo(memo.getMemo())
+                    .writerId(memo.getUser().getId())
+                    .writerNickName(memo.getUser().getNickname())
+                    .build();
+        }
     }
-
-
-
-
-}
