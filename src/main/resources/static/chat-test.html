@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>채팅 테스트</title>
+    <style>
+        #chat {
+          border: 1px solid #ccc;
+          padding: 10px;
+          height: 200px;
+          overflow-y: scroll;
+          background: #f9f9f9;
+        }
+        #chat li {
+          margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+<h2>채팅 테스트</h2>
+<ul id="chat"></ul>
+
+<input id="input" type="text" placeholder="메시지 입력" />
+<button onclick="send()">전송</button>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+<script>
+    const projectId = "123";
+    let senderId = null;
+    let nickname = null;
+
+    const token = localStorage.getItem("accessToken");
+    const socket = new SockJS("http://localhost:8080/ws");
+    const client = Stomp.over(socket);
+
+    function connectAndJoin() {
+      client.connect({}, () => {
+        // 1. 구독
+        client.subscribe("/topic/project/" + projectId, (msg) => {
+          const chat = JSON.parse(msg.body);
+          const li = document.createElement("li");
+          li.textContent = `[${chat.nickname}] ${chat.content}`;
+          document.getElementById("chat").appendChild(li);
+        });
+
+        // 2. JOIN 메시지 전송
+        client.send("/app/chat.join", {}, JSON.stringify({
+          type: "JOIN",
+          projectId,
+          sender: senderId,
+          nickname
+        }));
+      });
+    }
+
+
+    function send() {
+      const input = document.getElementById("input");
+      const content = input.value;
+      if (!content.trim()) return;
+
+      client.send("/app/chat.send", {}, JSON.stringify({
+        type: "MESSAGE",
+        projectId,
+        sender: senderId,
+        nickname,
+        content
+      }));
+      input.value = "";
+    }
+
+    const headers = {
+        "Content-Type": "application/json"
+    };
+    if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    console.log("✅ 토큰:", token);
+    console.log("📡 /chat/join 호출 시작");
+
+    // 3. 페이지 로드시 /chat/enter 호출
+    window.addEventListener("load", () => {
+      fetch("http://localhost:8080/chat/join", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ projectId })
+      })
+        .then(res => res.json())
+        .then(data => {
+          senderId = data.sender;
+          nickname = data.nickname;
+          connectAndJoin();
+        })
+        .catch(err => console.error("입장 실패", err));
+    });
+</script>
+</body>
+</html>

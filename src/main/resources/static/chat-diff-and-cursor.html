@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>채팅 + 코드 편집기</title>
+  <style>
+    body {
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+      font-family: monospace;
+    }
+    #chat, #editor {
+      width: 48%;
+    }
+    #chat ul {
+      border: 1px solid #ccc;
+      height: 200px;
+      padding: 10px;
+      overflow-y: scroll;
+      background: #f9f9f9;
+    }
+    #codeContainer {
+      position: relative;
+      border: 1px solid #ccc;
+      height: 200px;
+      background: #fff;
+      overflow-y: auto;
+    }
+    #codeArea {
+      width: 100%;
+      height: 100%;
+      outline: none;
+      white-space: pre-wrap;
+    }
+    .code-line {
+      min-height: 1em;
+    }
+    .cursor-line {
+      background-color: rgba(255, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+<div id="chat">
+  <h3>채팅</h3>
+  <ul id="chatList"></ul>
+  <input id="chatInput" placeholder="메시지 입력" />
+  <button onclick="sendChat()">전송</button>
+</div>
+
+<div id="editor">
+  <h3>코드 편집기</h3>
+  <div id="codeContainer">
+    <div id="codeArea" contenteditable="true"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+<script>
+  const projectId = "123";
+  const fileId = 1;
+  let sender = null;
+  let nickname = null;
+  let lastValue = "";
+  const token = localStorage.getItem("accessToken");
+  const socket = new SockJS("http://localhost:8080/ws");
+  const client = Stomp.over(socket);
+
+  function connect() {
+    client.connect({}, () => {
+      client.subscribe(`/topic/project/${projectId}`, (msg) => {
+        const chat = JSON.parse(msg.body);
+        const li = document.createElement("li");
+        li.textContent = `[${chat.nickname}] ${chat.content}`;
+        document.getElementById("chatList").appendChild(li);
+      });
+
+      client.subscribe(`/topic/project/${projectId}/file/${fileId}`, (msg) => {
+        const data = JSON.parse(msg.body);
+        if (data.sender === sender) return;
+
+        const before = lastValue;
+        const updated = before.slice(0, data.from.column) + data.text + before.slice(data.to.column);
+        lastValue = updated;
+        renderCodeArea(updated);
+      });
+
+      client.subscribe(`/topic/project/${projectId}/file/${fileId}/cursor`, (msg) => {
+        const data = JSON.parse(msg.body);
+        if (data.sender === sender) return;
+        if (data.cursor && typeof data.cursor.line === "number") {
+          highlightCursorLine(data.cursor.line);
+        }
+      });
+
+      client.send("/app/chat.join", {}, JSON.stringify({
+        type: "JOIN", projectId, sender, nickname
+      }));
+    });
+  }
+
+  function sendChat() {
+    const content = document.getElementById("chatInput").value;
+    if (!content.trim()) return;
+
+    client.send("/app/chat.send", {}, JSON.stringify({
+      type: "MESSAGE", projectId, sender, nickname, content
+    }));
+    document.getElementById("chatInput").value = "";
+  }
+
+  function sendDiffUpdate(newValue) {
+    const prev = lastValue;
+    const curr = newValue;
+
+    let start = 0;
+    while (start < prev.length && start < curr.length && prev[start] === curr[start]) start++;
+
+    let end = 0;
+    while (
+      end < prev.length - start &&
+      end < curr.length - start &&
+      prev[prev.length - 1 - end] === curr[curr.length - 1 - end]
+    ) end++;
+
+    const inserted = curr.slice(start, curr.length - end);
+
+    const message = {
+      type: "CODE_DIFF",
+      projectId,
+      fileId,
+      sender,
+      nickname,
+      text: inserted,
+      from: { lineNumber: 0, column: start },
+      to: { lineNumber: 0, column: prev.length - end },
+      timestamp: new Date().toISOString()
+    };
+
+    client.send("/app/code.diff", {}, JSON.stringify(message));
+    lastValue = curr;
+  }
+
+  function getPlainText() {
+    const lines = [...document.querySelectorAll("#codeArea .code-line")];
+    return lines.map(div => div.textContent === "​" ? "" : div.textContent).join("\n");
+  }
+
+  function getCaretLineNumber() {
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return 0;
+    const range = selection.getRangeAt(0);
+    const container = range.startContainer;
+    const lineDivs = [...document.querySelectorAll("#codeArea .code-line")];
+    return lineDivs.findIndex(div => div.contains(container));
+  }
+
+  function sendCursorPosition() {
+    const line = getCaretLineNumber();
+    const cursorMessage = {
+      type: "CODE_CURSOR",
+      projectId,
+      fileId,
+      sender,
+      nickname,
+      cursor: { line },
+      timestamp: new Date().toISOString()
+    };
+    client.send("/app/code.cursor", {}, JSON.stringify(cursorMessage));
+  }
+
+  function renderCodeArea(content) {
+    const codeArea = document.getElementById("codeArea");
+    codeArea.innerHTML = "";
+    const lines = content.split("\n");
+    lines.forEach(line => {
+      const div = document.createElement("div");
+      div.className = "code-line";
+      div.textContent = line || "\u200B";
+      codeArea.appendChild(div);
+    });
+  }
+
+  function highlightCursorLine(line) {
+    const lines = document.querySelectorAll("#codeArea .code-line");
+    lines.forEach((el, i) => {
+      el.classList.toggle("cursor-line", i === line);
+    });
+  }
+
+let timeout = null;
+const codeArea = document.getElementById("codeArea");
+
+codeArea.addEventListener("input", () => {
+  clearTimeout(timeout);
+  timeout = setTimeout(() => {
+    const text = getPlainText();
+    sendDiffUpdate(text);
+    sendCursorPosition(); // diff랑 함께 커서도 보냄
+  }, 500);
+});
+
+// 커서 위치 이동 감지는 debounce 없이 직접 감지 (느려도 OK)
+["keyup", "click", "mouseup"].forEach(evt => {
+  codeArea.addEventListener(evt, () => {
+    requestAnimationFrame(() => {
+      sendCursorPosition();
+    });
+  });
+});
+
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  fetch("http://localhost:8080/chat/join", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ projectId, fileId })
+  })
+    .then(res => res.json())
+    .then(data => {
+      sender = data.sender;
+      nickname = data.nickname;
+      connect();
+    });
+</script>
+</body>
+</html>
