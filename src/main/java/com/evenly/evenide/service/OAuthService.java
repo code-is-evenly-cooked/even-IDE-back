@@ -9,29 +9,32 @@ import com.evenly.evenide.global.exception.CustomException;
 import com.evenly.evenide.global.exception.ErrorCode;
 import com.evenly.evenide.global.oauth.GoogleOAuthClient;
 import com.evenly.evenide.global.oauth.KakaoOAuthClient;
+import com.evenly.evenide.global.oauth.OAuthClient;
 import com.evenly.evenide.global.util.SocialNameGenerator;
 import com.evenly.evenide.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class OAuthService {
 
-    private final GoogleOAuthClient googleOAuthClient;
-    private final KakaoOAuthClient kakaoOAuthClient;
+    private final List<OAuthClient> oAuthClients;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final SocialNameGenerator socialNameGenerator;
 
     @Transactional
     public SignInResponse loginWithOAuth(String provider, String accessToken) {
-        OAuthUserInfo userInfo = switch (provider.toUpperCase()) {
-            case "GOOGLE" -> googleOAuthClient.getUserInfo(accessToken);
-            case "KAKAO" -> kakaoOAuthClient.getUserInfo(accessToken);
-            default -> throw new CustomException(ErrorCode.UNSUPPORTED_PROVIDER);
-        };
+        OAuthClient client = oAuthClients.stream()
+                .filter(c -> c.getProviderName().equalsIgnoreCase(provider))
+                .findFirst()
+                .orElseThrow(() -> new CustomException(ErrorCode.UNSUPPORTED_PROVIDER));
+
+        OAuthUserInfo userInfo = client.getUserInfo(accessToken);
 
         return userRepository.findByProviderAndProviderId(provider, userInfo.getId())
                 .map(this::createSignInResponse)

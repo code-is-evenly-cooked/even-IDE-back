@@ -12,11 +12,17 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Component
-public class GoogleOAuthClient {
+public class GoogleOAuthClient implements OAuthClient{
 
     private final RestTemplate restTemplate = new RestTemplate();
     private static final String GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
 
+    @Override
+    public String getProviderName() {
+        return "GOOGLE";
+    }
+
+    @Override
     public GoogleUserInfo getUserInfo(String accessToken) {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(accessToken);

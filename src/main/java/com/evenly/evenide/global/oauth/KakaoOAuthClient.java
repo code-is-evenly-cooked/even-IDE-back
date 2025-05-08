@@ -12,11 +12,17 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Component
-public class KakaoOAuthClient {
+public class KakaoOAuthClient implements OAuthClient{
 
     private final RestTemplate restTemplate = new RestTemplate();
     private static final String KAKAO_USERINFO_URL = "https://kapi.kakao.com/v2/user/me";
 
+    @Override
+    public String getProviderName() {
+        return "KAKAO";
+    }
+
+    @Override
     public KakaoUserInfo getUserInfo(String accessToken) {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(accessToken);
