@@ -2,6 +2,8 @@ package com.evenly.evenide.global.scheduler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ public class RedisChatCleaner {
 
     private final RedisTemplate<String, String> redisTemplate;
 
+    @EventListener(ApplicationReadyEvent.class)
     @Scheduled(fixedDelay = 1000L * 60 * 60 * 6) // 6시간마다 실행
     public void cleanOldMessages() {
         log.info("🧹 Redis 채팅 정리 스케줄러 시작");
