@@ -21,12 +21,6 @@ configurations {
 
 repositories {
 	mavenCentral()
-	maven { url 'https://repo.spring.io/milestone' }
-	maven { url 'https://repo.spring.io/snapshot' }
-	maven {
-		name = 'Central Portal Snapshots'
-		url = 'https://central.sonatype.com/repository/maven-snapshots/'
-	}
 }
 
 dependencies {
@@ -38,8 +32,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
-	implementation platform("org.springframework.ai:spring-ai-bom:1.0.0-SNAPSHOT")
-	implementation 'org.springframework.ai:spring-ai-openai'
+	implementation platform("org.springframework.ai:spring-ai-bom:1.0.0")
+	implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+	implementation "org.springframework.ai:spring-ai-client-chat:1.0.0"
 	implementation 'org.apache.commons:commons-text:1.10.0'
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
