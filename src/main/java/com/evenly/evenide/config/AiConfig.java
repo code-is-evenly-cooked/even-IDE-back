@@ -15,7 +15,7 @@ public class AiConfig {
     private String apiKey;
 
     @Bean
-    public ChatClient chatClient() {
+    public OpenAiChatModel chatModel() {
 
         OpenAiApi openAiApi = OpenAiApi.builder()
                 .apiKey(apiKey)
@@ -25,14 +25,17 @@ public class AiConfig {
                 .model("gpt-4o-mini")
                 .build();
 
-        OpenAiChatModel chatModel = OpenAiChatModel.builder()
+
+        return OpenAiChatModel.builder()
                 .openAiApi(openAiApi)
                 .defaultOptions(options)
                 .build();
+    }
 
-        return ChatClient.builder(chatModel)
-                .defaultSystem("넌 친근하고 재밌는 튜터야. 항상 친구에게 설명하듯 말해줘. " +
-                        "쓸모 없는 말은 삼가고 대답은 최대한 간결하고 짧게 부탁할게.")
+    @Bean
+    public ChatClient chatClient(ChatClient.Builder builder) {
+        return builder
+                .defaultSystem("넌 친근하고 재밌는 튜터야. 항상 친구에게 설명하듯 말해줘. 쓸모 없는 말은 삼가고 대답은 최대한 간결하고 짧게 부탁할게.")
                 .build();
     }
 }
